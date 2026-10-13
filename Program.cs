@@ -17,6 +17,7 @@ namespace RaceDay.API_Part2
 
             // Add DbContext
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(connectionString));
 
@@ -40,8 +41,10 @@ namespace RaceDay.API_Part2
 
             app.MapOpenApi();
             app.UseHttpsRedirection();
+
             app.UseSession(); // Must be before UseAuthorization
             app.UseAuthorization();
+
             app.MapControllers();
 
             app.Run();
