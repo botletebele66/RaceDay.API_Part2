@@ -12,25 +12,30 @@ namespace RaceDay.API_Part2
             // Add services to the container.
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddOpenApi();
-            builder.Services.AddSwaggerGen();
+
             builder.Services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                options.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo
                 {
                     Title = "RaceDay API",
                     Version = "v1",
                     Description = "API for the RaceDay event management system."
                 });
-                // Set the comments path for the Swagger JSON and UI.
+
+                // Only works if <GenerateDocumentationFile>true</GenerateDocumentationFile>
+                // is set in the .csproj — otherwise the XML file is never created.
                 var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                options.IncludeXmlComments(xmlPath);
+                if (File.Exists(xmlPath))
+                {
+                    options.IncludeXmlComments(xmlPath);
+                }
             });
 
-
             // Add DbContext
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException(
+                    "Connection string 'DefaultConnection' was not found in configuration.");
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(connectionString));
@@ -53,10 +58,9 @@ namespace RaceDay.API_Part2
                 app.UseSwaggerUI();
             }
 
-            app.MapOpenApi();
             app.UseHttpsRedirection();
 
-            app.UseSession(); // Must be before UseAuthorization
+            app.UseSession();      // Must be before UseAuthorization
             app.UseAuthorization();
 
             app.MapControllers();
