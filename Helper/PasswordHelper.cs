@@ -1,4 +1,6 @@
-﻿namespace RaceDay.API_Part2.Helper
+﻿using BCrypt.Net;
+
+namespace RaceDay.API_Part2.Helper
 {
     public static class PasswordHelper
     {
