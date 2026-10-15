@@ -69,11 +69,11 @@ public class CategoryRequest
     public string CategoryName { get; set; } = string.Empty;
 
     /// <summary>Distance in kilometres (greater than 0).</summary>
-    [Range(typeof(decimal), "0.01", "1000")]
+    [Range(0.01, 1000)]
     public decimal Distance { get; set; }
 
     /// <summary>Entry fee in ZAR (0 or more).</summary>
-    [Range(typeof(decimal), "0", "100000")]
+    [Range(0, 100000)]
     public decimal EntryFee { get; set; }
 
     /// <summary>Optional minimum age on the event date.</summary>
