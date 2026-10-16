@@ -201,6 +201,9 @@ A GitHub Actions workflow (`.github/workflows/ci.yml`) is configured to run on e
 3. Restores NuGet packages.
 4. Builds the solution.
 5. Runs all unit tests.
+6.
+7. <img width="988" height="120" alt="image" src="https://github.com/user-attachments/assets/52797553-5670-43b0-bf33-8852b5d2bb86" />
+
 
 ### Build Status
 
