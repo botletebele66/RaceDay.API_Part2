@@ -1,0 +1,119 @@
+# CI workflow for building/testing .NET desktop apps (WPF/WinForms)
+# - Auto-discovers solution (.sln) and test projects
+# - Runs restore, build, test for Debug and Release
+# - If a Windows Application Packaging project (*.wapproj) exists, it will build/package it
+# - Packaging steps use the Base64_Encoded_Pfx secret only when provided
+
+name: .NET Core Desktop
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1
+
+    - name: Find solution
+      id: find_sln
+      shell: pwsh
+      run: |
+        $sln = Get-ChildItem -Path . -Filter *.sln -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+        if (-not $sln) {
+          Write-Host "No solution file (*.sln) found in the repository. The workflow expects at least one .sln file."
+          Write-Output "solution=" >> $env:GITHUB_OUTPUT
+        } else {
+          Write-Host "Found solution: $sln"
+          Write-Output "solution=$sln" >> $env:GITHUB_OUTPUT
+        }
+
+    - name: Restore
+      if: steps.find_sln.outputs.solution != ''
+      run: dotnet restore "${{ steps.find_sln.outputs.solution }}"
+
+    - name: Build
+      if: steps.find_sln.outputs.solution != ''
+      run: dotnet build "${{ steps.find_sln.outputs.solution }}" -c ${{ matrix.configuration }} --no-restore
+
+    - name: Run tests
+      if: steps.find_sln.outputs.solution != ''
+      run: dotnet test "${{ steps.find_sln.outputs.solution }}" -c ${{ matrix.configuration }} --no-build --verbosity minimal
+
+    - name: Find WAP project
+      id: find_wap
+      shell: pwsh
+      run: |
+        $wapproj = Get-ChildItem -Path . -Filter *.wapproj -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+        if (-not $wapproj) {
+          Write-Output "wapproj=" >> $env:GITHUB_OUTPUT
+        } else {
+          Write-Output "wapproj=$wapproj" >> $env:GITHUB_OUTPUT
+        }
+
+    - name: Decode signing certificate (if provided)
+      id: decode_pfx
+      if: steps.find_wap.outputs.wapproj != '' && secrets.Base64_Encoded_Pfx != ''
+      shell: pwsh
+      run: |
+        $wapproj = "${{ steps.find_wap.outputs.wapproj }}"
+        $wapprojDir = Split-Path -Path $wapproj -Parent
+        $pfxBytes = [System.Convert]::FromBase64String("${{ secrets.Base64_Encoded_Pfx }}")
+        $certificatePath = Join-Path -Path $wapprojDir -ChildPath GitHubActionsWorkflow.pfx
+        [IO.File]::WriteAllBytes($certificatePath, $pfxBytes)
+        Write-Host "Wrote certificate to $certificatePath"
+        Write-Output "pfx_path=$certificatePath" >> $env:GITHUB_OUTPUT
+
+    - name: Create the app package (WAP)
+      if: steps.find_wap.outputs.wapproj != ''
+      shell: pwsh
+      env:
+        Configuration: ${{ matrix.configuration }}
+      run: |
+        $wapproj = "${{ steps.find_wap.outputs.wapproj }}"
+        if (-not $wapproj) { Write-Host "No WAP project found, skipping packaging."; exit 0 }
+        $wapprojDir = Split-Path -Path $wapproj -Parent
+        $pfxCandidate = Join-Path -Path $wapprojDir -ChildPath "GitHubActionsWorkflow.pfx"
+        $msbuildCmd = "msbuild `"$wapproj`" /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=StoreUpload /p:AppxBundle=Always"
+        if (Test-Path $pfxCandidate) {
+          Write-Host "PFX found; adding PackageCertificateKeyFile property"
+          $msbuildCmd += " /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx"
+        } else {
+          Write-Host "No PFX found; building package without explicit PackageCertificateKeyFile"
+        }
+        Write-Host "Running: $msbuildCmd"
+        iex $msbuildCmd
+
+    - name: Remove the pfx
+      if: steps.find_wap.outputs.wapproj != '' && secrets.Base64_Encoded_Pfx != ''
+      shell: pwsh
+      run: |
+        $wapproj = "${{ steps.find_wap.outputs.wapproj }}"
+        $wapprojDir = Split-Path -Path $wapproj -Parent
+        $certificatePath = Join-Path -Path $wapprojDir -ChildPath GitHubActionsWorkflow.pfx
+        if (Test-Path $certificatePath) { Remove-Item -Path $certificatePath -Force; Write-Host "Removed $certificatePath" }
+
+    - name: Upload build artifacts
+      if: steps.find_wap.outputs.wapproj != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: MSIX Package
+        path: '**/AppPackages/**'
