@@ -212,7 +212,7 @@ A GitHub Actions workflow (`.github/workflows/ci.yml`) is configured to run on e
 
 ## 🎥 Video Presentation
 
-Watch the Part 2 API Demonstration here: **(Insert your unlisted YouTube link here)**
+Watch the Part 2 API Demonstration here: https://youtu.be/MUZnaBPyjAk
 
 The video covers:
 
