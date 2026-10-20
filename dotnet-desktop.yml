@@ -1,0 +1,38 @@
+# CI workflow for the RaceDay ASP.NET Core Web API (net10.0)
+# Steps: checkout -> setup .NET -> restore -> build -> test (if a test project exists)
+
+name: CI
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Restore
+      run: dotnet restore RaceDay.API_Part2.csproj
+
+    - name: Build
+      run: dotnet build RaceDay.API_Part2.csproj --configuration Release --no-restore
+
+    # Runs only when a test project is committed under tests/ (the API project already excludes tests\** from its build).
+    - name: Run tests
+      if: ${{ hashFiles('tests/**/*.csproj') != '' }}
+      run: |
+        for proj in tests/**/*.csproj; do
+          dotnet test "$proj" --configuration Release --verbosity normal
+        done
+      shell: bash
