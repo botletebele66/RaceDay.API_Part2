@@ -11,7 +11,9 @@
     <NoWarn>$(NoWarn);CS1591;NU1603</NoWarn>
   </PropertyGroup>
 
-  <!-- The test project lives in tests/. Without this, the API project would try to compile the test sources too. -->
+  <ItemGroup>
+    <None Include=".github\workflows\ci.yml" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
