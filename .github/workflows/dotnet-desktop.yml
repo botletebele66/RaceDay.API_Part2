@@ -20,15 +20,10 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore RaceDay.API_Part2.csproj
+        run: dotnet restore RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj
 
       - name: Build
-        run: dotnet build RaceDay.API_Part2.csproj --configuration Release --no-restore
+        run: dotnet build RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj --configuration Release --no-restore
 
-      - name: Run tests
-        if: ${{ hashFiles('tests/**/*.csproj') != '' }}
-        shell: bash
-        run: |
-          for proj in tests/*/*.csproj; do
-            dotnet test "$proj" --configuration Release --verbosity normal
-          done
+      - name: Test
+        run: dotnet test RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj --configuration Release --no-build --verbosity normal
