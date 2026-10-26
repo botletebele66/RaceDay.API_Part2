@@ -1,0 +1,78 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\botsh\\Documents\\GitHub\\botletebele66\\PART2\\RaceDay.API_Part2\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{C83AEA09-05B1-7977-0C90-EE7D963E6E8C}|..\\RaceDay.APItests_Part2\\RaceDay.APItests_Part2.csproj|c:\\users\\botsh\\documents\\github\\botletebele66\\part2\\raceday.apitests_part2\\raceday.apitests_part2\\tests\\authorizeroleattributetests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 8,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{75188d03-9892-4ae2-abf1-207126247ce5}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:130:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "AuthorizeRoleAttributeTests.cs",
+              "DocumentMoniker": "C:\\Users\\botsh\\Documents\\GitHub\\botletebele66\\PART2\\RaceDay.APItests_Part2\\RaceDay.APItests_Part2\\Tests\\AuthorizeRoleAttributeTests.cs",
+              "RelativeDocumentMoniker": "..\\RaceDay.APItests_Part2\\RaceDay.APItests_Part2\\Tests\\AuthorizeRoleAttributeTests.cs",
+              "ToolTip": "C:\\Users\\botsh\\Documents\\GitHub\\botletebele66\\PART2\\RaceDay.APItests_Part2\\RaceDay.APItests_Part2\\Tests\\AuthorizeRoleAttributeTests.cs",
+              "RelativeToolTip": "..\\RaceDay.APItests_Part2\\RaceDay.APItests_Part2\\Tests\\AuthorizeRoleAttributeTests.cs",
+              "ViewState": "AgIAAH4AAAAAAAAAAAAAAH4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-24T13:05:32.848Z",
+              "EditorCaption": ""
+            }
+          ]
+        },
+        {
+          "DockedWidth": 23,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
