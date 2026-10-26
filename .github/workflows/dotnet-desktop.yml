@@ -1,10 +1,16 @@
-name: CI
+name: Build and test
 
 on:
   push:
-    branches: ["main", "master"]
+    branches: [ main, master, develop ]
   pull_request:
-    branches: ["main", "master"]
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
 jobs:
   build-and-test:
@@ -17,18 +23,38 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: '10.0.x'
 
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json', '**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      # Restore the *test* project. Because the test project has a ProjectReference,
+      # restore will fail loudly if the API project is missing — exactly what we want.
       - name: Restore
-        run: dotnet restore RaceDay.API_Part2.csproj
+        run: dotnet restore RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj
 
       - name: Build
-        run: dotnet build RaceDay.API_Part2.csproj --configuration Release --no-restore
+        run: >
+          dotnet build RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj
+          --configuration Release
+          --no-restore
+          --warnaserror:false
 
-      - name: Run tests
-        if: ${{ hashFiles('tests/**/*.csproj') != '' }}
-        shell: bash
-        run: |
-          for proj in tests/*/*.csproj; do
-            dotnet test "$proj" --configuration Release --verbosity normal
-          done
+      - name: Test
+        run: >
+          dotnet test RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj
+          --configuration Release
+          --no-build
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/**/*.trx
