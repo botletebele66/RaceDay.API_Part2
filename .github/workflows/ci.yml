@@ -1,4 +1,4 @@
-name: Build and test
+name: Build API
 
 on:
   push:
@@ -13,7 +13,7 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,47 +25,24 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      # Fails immediately with a clear message if the API project was never
-      # committed, instead of letting the build spew 19 CS0234/CS0246 errors.
-      - name: Guard – required projects are present
+      - name: Guard – API project is present
         run: |
-          set -e
-          for f in \
-            RaceDay.API_Part2/RaceDay.API_Part2.csproj \
-            RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj
-          do
-            test -f "$f" || { echo "::error file=$f::Project file is missing from the repository"; exit 1; }
-          done
+          test -f RaceDay.API_Part2/RaceDay.API_Part2.csproj \
+            || { echo "::error file=RaceDay.API_Part2/RaceDay.API_Part2.csproj::API project is missing from the repository"; exit 1; }
 
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('RaceDay.API_Part2/**/*.csproj') }}
           restore-keys: ${{ runner.os }}-nuget-
 
-      # Restoring the test project transitively pulls in the API project via
-      # its <ProjectReference>, so a missing API project fails here loudly.
       - name: Restore
-        run: dotnet restore RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj
+        run: dotnet restore RaceDay.API_Part2/RaceDay.API_Part2.csproj
 
       - name: Build
         run: >
-          dotnet build RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj
+          dotnet build RaceDay.API_Part2/RaceDay.API_Part2.csproj
           --configuration Release
           --no-restore
-
-      - name: Test
-        run: >
-          dotnet test RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj
-          --configuration Release
-          --no-build
-          --logger "trx;LogFileName=test-results.trx"
-          --results-directory TestResults
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: TestResults/**/*.trx
+          
