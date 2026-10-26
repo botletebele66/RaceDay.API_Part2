@@ -16,6 +16,8 @@
 
 [![Build](https://github.com/botletebele66/RaceDay.API_Part2/actions/workflows/ci.yml/badge.svg)](https://github.com/botletebele66/RaceDay.API_Part2/actions/workflows/ci.yml)
 
+<img width="987" height="192" alt="image" src="https://github.com/user-attachments/assets/504725ee-0dd2-409a-8ee6-84cdefaf1fd4" />
+
 ---
 ## рџЋҐ Video Walkthrough
 
