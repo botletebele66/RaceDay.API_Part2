@@ -10,6 +10,7 @@
         public string EventType { get; set; } = string.Empty; // "Running", "Walking", "Cycling"
         public string? Description { get; set; }
         public int? MaxParticipants { get; set; }
+        public string? ImageUrl { get; set; } // Banner image, stored in Azure Blob Storage (or local uploads in development)
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedDate { get; set; } = DateTime.UtcNow;
 

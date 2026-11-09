@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RaceDay.API_Part2.Data;
 using RaceDay.API_Part2.Helper;
+using RaceDay.API_Part2.Services;
 
 namespace RaceDay.API_Part2
 {
@@ -43,6 +44,7 @@ namespace RaceDay.API_Part2
             builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 
             builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddScoped<IAzureBlobService, AzureBlobService>();
             builder.Services.AddSession(options =>
             {
                 options.Cookie.Name = SessionKeys.CookieName;
@@ -67,10 +69,13 @@ namespace RaceDay.API_Part2
             app.UseSwagger();
             app.UseSwaggerUI();
 
-            if (!app.Environment.IsEnvironment("Testing"))
+            // Containers serve plain HTTP behind the host's port mapping, so the redirect can be switched off (App:HttpsRedirect).
+            if (!app.Environment.IsEnvironment("Testing") && app.Configuration.GetValue("App:HttpsRedirect", true))
             {
                 app.UseHttpsRedirection();
             }
+
+            app.UseStaticFiles();   // Serves /uploads/* when images are stored locally.
 
             app.UseSession();   // Must come before MapControllers so controllers can read the session.
             app.MapControllers();

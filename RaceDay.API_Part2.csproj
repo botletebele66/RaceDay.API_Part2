@@ -9,13 +9,12 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- CS1591: public members without XML comments. Endpoints are documented; plain DTO properties are not all annotated. -->
     <NoWarn>$(NoWarn);CS1591;NU1603</NoWarn>
+    <!-- The API lives at the repository root, so keep the MVC front end and the test projects out of its build. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);RaceDay.MVC/**;tests/**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include=".github\workflows\ci.yml" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.23.0" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />

@@ -8,6 +8,7 @@
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string UserRole { get; set; } = string.Empty; // "Organiser" or "Participant"
+        public string? ProfileImageUrl { get; set; }          // Profile picture, stored via the API's blob service
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedDate { get; set; } = DateTime.UtcNow;
 
