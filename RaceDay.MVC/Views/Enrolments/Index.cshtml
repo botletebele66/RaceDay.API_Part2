@@ -1,0 +1,64 @@
+@model MyEventsViewModel
+@{
+    ViewData["Title"] = "My events";
+    var now = DateTime.UtcNow;
+    var upcoming = Model.Enrolments.Where(e => e.EventDate > now && e.Status != "Withdrawn").OrderBy(e => e.EventDate).ToList();
+    var past = Model.Enrolments.Where(e => e.EventDate <= now || e.Status == "Withdrawn").OrderByDescending(e => e.EventDate).ToList();
+}
+
+<div class="rd-page-head d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="rd-title mb-1">My events</h1>
+        <p class="rd-muted mb-0">Your entries and their current status.</p>
+    </div>
+    <a class="btn btn-rd-primary" asp-controller="Home" asp-action="Index"><i class="fa-solid fa-magnifying-glass me-1" aria-hidden="true"></i>Find more events</a>
+</div>
+
+<div class="rd-legend mb-4" aria-label="Status colour guide">
+    <span class="rd-badge status-confirmed">Confirmed</span>
+    <span class="rd-badge status-pending">In progress</span>
+    <span class="rd-badge status-completed">Completed</span>
+    <span class="rd-badge status-withdrawn">Withdrawn</span>
+</div>
+
+@if (!Model.Enrolments.Any())
+{
+    <div class="rd-empty text-center">
+        <div class="rd-empty-icon"><i class="fa-solid fa-person-running" aria-hidden="true"></i></div>
+        <h2 class="h4">No entries yet</h2>
+        <p class="rd-muted">Pick an event and a category to get started.</p>
+        <a class="btn btn-rd-primary" asp-controller="Home" asp-action="Index">Browse events</a>
+    </div>
+}
+else
+{
+    <h2 class="h5 mb-3">Upcoming</h2>
+    @if (!upcoming.Any())
+    {
+        <p class="rd-muted">Nothing upcoming.</p>
+    }
+    else
+    {
+        <div class="vstack gap-3 mb-5">
+            @foreach (var e in upcoming)
+            {
+                <partial name="_EnrolmentRow" model="e" />
+            }
+        </div>
+    }
+
+    <h2 class="h5 mb-3">Past and withdrawn</h2>
+    @if (!past.Any())
+    {
+        <p class="rd-muted">No past entries.</p>
+    }
+    else
+    {
+        <div class="vstack gap-3">
+            @foreach (var e in past)
+            {
+                <partial name="_EnrolmentRow" model="e" />
+            }
+        </div>
+    }
+}

@@ -1,0 +1,84 @@
+@model ResultsEntryViewModel
+@{
+    var ev = Model.Event;
+    ViewData["Title"] = "Results · " + ev.EventName;
+}
+
+<nav aria-label="Breadcrumb">
+    <ol class="breadcrumb rd-crumbs">
+        <li class="breadcrumb-item"><a asp-controller="Events" asp-action="Index">My events</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Events" asp-action="Manage" asp-route-id="@ev.EventId">@ev.EventName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Results</li>
+    </ol>
+</nav>
+
+<div class="rd-page-head mb-4">
+    <h1 class="rd-title mb-1">Enter results</h1>
+    <p class="rd-muted mb-0">Type the finish time (hours, minutes, seconds) and the overall position. Leave a row blank to skip it.</p>
+</div>
+
+@if (!Model.Rows.Any())
+{
+    <div class="rd-empty text-center">
+        <div class="rd-empty-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></div>
+        <h2 class="h4">No participants to score yet</h2>
+        <p class="rd-muted mb-0">Results can be entered once participants have enrolled.</p>
+    </div>
+}
+else
+{
+    <form asp-controller="Results" asp-action="Record" method="post" class="rd-panel p-0 overflow-hidden">
+        <input type="hidden" name="EventId" value="@ev.EventId" />
+        <div class="table-responsive">
+            <table class="table rd-table rd-results-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Participant</th>
+                        <th scope="col">Category</th>
+                        <th scope="col" class="text-center">Hours</th>
+                        <th scope="col" class="text-center">Min</th>
+                        <th scope="col" class="text-center">Sec</th>
+                        <th scope="col" class="text-center">Position</th>
+                        <th scope="col">Recorded</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < Model.Rows.Count; i++)
+                    {
+                        var row = Model.Rows[i];
+                        var h = row.Existing?.TimeCompleted is int t ? t / 3600 : (int?)null;
+                        var m = row.Existing?.TimeCompleted is int t2 ? (t2 % 3600) / 60 : (int?)null;
+                        var s = row.Existing?.TimeCompleted is int t3 ? t3 % 60 : (int?)null;
+                        <tr>
+                            <td>
+                                <input type="hidden" name="Rows[@i].EnrolmentId" value="@row.EnrolmentId" />
+                                <input type="hidden" name="Rows[@i].Name" value="@row.ParticipantName" />
+                                <div class="fw-semibold">@row.ParticipantName</div>
+                                <div class="small rd-muted">@row.Email</div>
+                            </td>
+                            <td class="small">@row.CategoryName</td>
+                            <td><input class="form-control form-control-sm text-center" type="number" min="0" max="48" name="Rows[@i].Hours" value="@h" aria-label="Hours for @row.ParticipantName" /></td>
+                            <td><input class="form-control form-control-sm text-center" type="number" min="0" max="59" name="Rows[@i].Minutes" value="@m" aria-label="Minutes for @row.ParticipantName" /></td>
+                            <td><input class="form-control form-control-sm text-center" type="number" min="0" max="59" name="Rows[@i].Seconds" value="@s" aria-label="Seconds for @row.ParticipantName" /></td>
+                            <td><input class="form-control form-control-sm text-center" type="number" min="1" max="100000" name="Rows[@i].Position" value="@row.Existing?.PlacementRank" aria-label="Position for @row.ParticipantName" /></td>
+                            <td>
+                                @if (row.Existing is not null)
+                                {
+                                    <span class="rd-badge status-completed">Saved</span>
+                                }
+                                else
+                                {
+                                    <span class="small rd-muted">Not yet</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="p-3 d-flex justify-content-end gap-2 rd-panel-foot">
+            <a class="btn btn-rd-ghost" asp-controller="Events" asp-action="Manage" asp-route-id="@ev.EventId">Back to event</a>
+            <button type="submit" class="btn btn-rd-primary">Save results</button>
+        </div>
+    </form>
+}

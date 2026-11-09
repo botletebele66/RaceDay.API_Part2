@@ -1,0 +1,125 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var now = DateTime.UtcNow;
+}
+
+@if (Me.IsOrganiser)
+{
+    <section class="rd-page-head mb-4">
+        <h1 class="rd-title">Hi @Me.FirstName, here's your race overview</h1>
+        <p class="rd-muted mb-0">Keep an eye on enrolments and get your events race-ready.</p>
+    </section>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3"><div class="rd-kpi"><span class="rd-kpi-label">Events created</span><span class="rd-kpi-value">@Model.EventCount</span></div></div>
+        <div class="col-6 col-lg-3"><div class="rd-kpi"><span class="rd-kpi-label">Upcoming events</span><span class="rd-kpi-value">@Model.UpcomingEventCount</span></div></div>
+        <div class="col-6 col-lg-3"><div class="rd-kpi"><span class="rd-kpi-label">Total enrolments</span><span class="rd-kpi-value">@Model.TotalEnrolments</span></div></div>
+        <div class="col-6 col-lg-3"><div class="rd-kpi rd-kpi-accent"><span class="rd-kpi-label">Next start</span><span class="rd-kpi-value rd-kpi-small">@(Model.EventRows.Where(r => r.Event.EventDate > now).Select(r => UiFormat.LongDate(SouthAfricaTime.FromApi(r.Event.EventDate))).FirstOrDefault() ?? "None scheduled")</span></div></div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="rd-panel">
+                <div class="d-flex justify-content-between align-items-center mb-3 gap-2">
+                    <h2 class="h4 mb-0">Your events</h2>
+                    <a class="btn btn-sm btn-rd-primary" asp-controller="Events" asp-action="Create"><i class="fa-solid fa-plus me-1" aria-hidden="true"></i>New event</a>
+                </div>
+                @if (!Model.EventRows.Any())
+                {
+                    <p class="rd-muted mb-0">You haven't created an event yet. Create one and start taking entries.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table rd-table align-middle mb-0">
+                            <thead><tr><th scope="col">Event</th><th scope="col">Date</th><th scope="col" class="text-end">Enrolments</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+                            <tbody>
+                                @foreach (var row in Model.EventRows)
+                                {
+                                    <tr>
+                                        <td>
+                                            <a class="fw-semibold" asp-controller="Events" asp-action="Manage" asp-route-id="@row.Event.EventId">@row.Event.EventName</a>
+                                            <div class="small rd-muted">@row.Event.EventType · @row.Event.Location</div>
+                                        </td>
+                                        <td class="small">@UiFormat.LongDate(SouthAfricaTime.FromApi(row.Event.EventDate))</td>
+                                        <td class="text-end fw-bold">@row.EnrolmentCount</td>
+                                        <td class="text-end">
+                                            <a class="btn btn-sm btn-rd-ghost" asp-controller="Enrolments" asp-action="Event" asp-route-id="@row.Event.EventId">Participants</a>
+                                            <a class="btn btn-sm btn-rd-ghost" asp-controller="Results" asp-action="Event" asp-route-id="@row.Event.EventId">Results</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="rd-panel">
+                <h2 class="h5 mb-3">Upcoming dates</h2>
+                @{
+                    var upcomingRows = Model.EventRows.Where(r => r.Event.EventDate > now).Take(5).ToList();
+                }
+                @if (!upcomingRows.Any())
+                {
+                    <p class="rd-muted mb-0">No upcoming events.</p>
+                }
+                else
+                {
+                    <ol class="rd-timeline list-unstyled mb-0">
+                        @foreach (var row in upcomingRows)
+                        {
+                            var local = SouthAfricaTime.FromApi(row.Event.EventDate);
+                            <li>
+                                <span class="rd-timeline-date">@UiFormat.LongDate(local)</span>
+                                <a asp-controller="Events" asp-action="Manage" asp-route-id="@row.Event.EventId">@row.Event.EventName</a>
+                            </li>
+                        }
+                    </ol>
+                }
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <section class="rd-page-head mb-4">
+        <h1 class="rd-title">Hi @Me.FirstName, ready to race?</h1>
+        <p class="rd-muted mb-0">Your upcoming events, results and next steps in one place.</p>
+    </section>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-4"><div class="rd-kpi"><span class="rd-kpi-label">Upcoming events</span><span class="rd-kpi-value">@Model.UpcomingEnrolmentCount</span></div></div>
+        <div class="col-6 col-lg-4"><div class="rd-kpi"><span class="rd-kpi-label">Races completed</span><span class="rd-kpi-value">@Model.CompletedCount</span></div></div>
+        <div class="col-12 col-lg-4 d-grid align-self-center"><a class="btn btn-rd-primary btn-lg" asp-controller="Home" asp-action="Index"><i class="fa-solid fa-magnifying-glass me-2" aria-hidden="true"></i>Find an event</a></div>
+    </div>
+
+    <div class="rd-panel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h4 mb-0">Coming up</h2>
+            <a asp-controller="Enrolments" asp-action="Index">All my events</a>
+        </div>
+        @if (!Model.UpcomingEnrolments.Any())
+        {
+            <p class="rd-muted mb-0">You're not entered in any upcoming events yet. <a asp-controller="Home" asp-action="Index">Browse events</a>.</p>
+        }
+        else
+        {
+            <ul class="list-unstyled rd-list mb-0">
+                @foreach (var enrolment in Model.UpcomingEnrolments)
+                {
+                    <li>
+                        <div>
+                            <a class="fw-semibold" asp-controller="Home" asp-action="Details" asp-route-id="@enrolment.EventId">@enrolment.EventName</a>
+                            <div class="small rd-muted">@enrolment.CategoryName · @UiFormat.LongDate(SouthAfricaTime.FromApi(enrolment.EventDate))</div>
+                        </div>
+                        <partial name="_StatusBadge" model="enrolment.Status" />
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+}

@@ -1,0 +1,28 @@
+@model CategoryInput
+@{
+    var index = ViewData["RowIndex"]?.ToString() ?? "0";
+}
+<div class="rd-cat-row">
+    <input type="hidden" name="Categories.index" value="@index" />
+    <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">
+            <label class="form-label small fw-semibold">Category name</label>
+            <input class="form-control" name="Categories[@index].CategoryName" value="@Model.CategoryName" maxlength="100" placeholder="e.g. 10km or Under 20" />
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small fw-semibold">Distance (km)</label>
+            <input class="form-control" type="number" step="0.01" min="0.01" max="1000" name="Categories[@index].Distance" value="@Model.Distance.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small fw-semibold">Entry fee (R)</label>
+            <input class="form-control" type="number" step="0.01" min="0" max="100000" name="Categories[@index].EntryFee" value="@Model.EntryFee.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small fw-semibold">Min. age</label>
+            <input class="form-control" type="number" min="0" max="120" name="Categories[@index].AgeRestriction" value="@Model.AgeRestriction" placeholder="Any" />
+        </div>
+        <div class="col-6 col-md-2 d-grid">
+            <button type="button" class="btn btn-outline-danger btn-sm" data-remove-category>Remove</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,20 @@
+@model EnrolmentDto
+@{
+    var local = SouthAfricaTime.FromApi(Model.EventDate);
+    var canWithdraw = Model.Status == "Registered" && Model.EventDate > DateTime.UtcNow;
+}
+<article class="rd-card rd-enrol-row p-3 d-flex flex-wrap align-items-center gap-3">
+    <span class="rd-type-chip @UiFormat.EventTypeClass(Model.EventType)" aria-hidden="true"><i class="fa-solid @UiFormat.EventTypeIcon(Model.EventType)"></i></span>
+    <div class="flex-grow-1">
+        <a class="fw-semibold" asp-controller="Home" asp-action="Details" asp-route-id="@Model.EventId">@Model.EventName</a>
+        <div class="small rd-muted">@Model.CategoryName (@UiFormat.Km(Model.Distance)) · @UiFormat.LongDate(local) at @UiFormat.ShortTime(local) · @Model.Location</div>
+    </div>
+    <partial name="_StatusBadge" model="Model.Status" />
+    @if (canWithdraw)
+    {
+        <form asp-controller="Enrolments" asp-action="Withdraw" method="post" data-confirm="Withdraw from this event?">
+            <input type="hidden" name="id" value="@Model.EnrolmentId" />
+            <button type="submit" class="btn btn-sm btn-outline-danger">Withdraw</button>
+        </form>
+    }
+</article>

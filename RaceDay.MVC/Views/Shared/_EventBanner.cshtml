@@ -1,0 +1,11 @@
+@model EventDto
+<div class="rd-banner @UiFormat.EventTypeClass(Model.EventType)">
+    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+    {
+        <img src="@Model.ImageUrl" alt="Banner for @Model.EventName" loading="lazy" class="rd-banner-img" />
+    }
+    else
+    {
+        <i class="fa-solid @UiFormat.EventTypeIcon(Model.EventType) rd-banner-icon" aria-hidden="true"></i>
+    }
+</div>

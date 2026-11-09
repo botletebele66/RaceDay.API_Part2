@@ -1,0 +1,97 @@
+@model EventFormViewModel
+@{
+    var isCreate = Model.EventId is null;
+    var templateData = new ViewDataDictionary(ViewData) { { "RowIndex", "__index__" } };
+}
+
+<form asp-action="@(isCreate ? "Create" : "Edit")" asp-route-id="@Model.EventId" method="post" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="alert rd-alert rd-alert-danger" role="alert"></div>
+
+    <section class="rd-panel mb-4" aria-labelledby="detailsHeading">
+        <h2 id="detailsHeading" class="h5 mb-3">Event details</h2>
+        <div class="row g-3">
+            <div class="col-md-8">
+                <label asp-for="EventName" class="form-label fw-semibold"></label>
+                <input asp-for="EventName" class="form-control" maxlength="255" />
+                <span asp-validation-for="EventName" class="text-danger small"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="EventType" class="form-label fw-semibold"></label>
+                <select asp-for="EventType" class="form-select">
+                    @foreach (var type in EventTypes.All)
+                    {
+                        <option value="@type" selected="@(Model.EventType == type)">@type</option>
+                    }
+                </select>
+                <span asp-validation-for="EventType" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="EventDate" class="form-label fw-semibold"></label>
+                <input asp-for="EventDate" type="datetime-local" class="form-control" />
+                <span asp-validation-for="EventDate" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Location" class="form-label fw-semibold"></label>
+                <input asp-for="Location" class="form-control" maxlength="255" placeholder="Venue or route, e.g. Sea Point Promenade" />
+                <span asp-validation-for="Location" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="MaxParticipants" class="form-label fw-semibold"></label>
+                <input asp-for="MaxParticipants" type="number" min="1" max="100000" class="form-control" placeholder="No limit" />
+                <span asp-validation-for="MaxParticipants" class="text-danger small"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="Description" class="form-label fw-semibold"></label>
+                <textarea asp-for="Description" class="form-control" rows="4" maxlength="4000"></textarea>
+                <span asp-validation-for="Description" class="text-danger small"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="rd-panel mb-4" aria-labelledby="bannerHeading">
+        <h2 id="bannerHeading" class="h5 mb-1">Event banner</h2>
+        <p class="small rd-muted mb-3">JPG, PNG, WEBP or GIF, up to 5 MB. Shown on the event page and in listings.</p>
+        <div class="row g-3 align-items-center">
+            @if (!string.IsNullOrEmpty(Model.CurrentImageUrl))
+            {
+                <div class="col-md-4">
+                    <img src="@Model.CurrentImageUrl" alt="Current banner" class="rd-thumb" />
+                </div>
+            }
+            <div class="@(string.IsNullOrEmpty(Model.CurrentImageUrl) ? "col-12" : "col-md-8")">
+                <input type="hidden" name="CurrentImageUrl" value="@Model.CurrentImageUrl" />
+                <label class="form-label fw-semibold" for="Banner">Choose an image</label>
+                <input id="Banner" name="Banner" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" />
+                <span asp-validation-for="Banner" class="text-danger small"></span>
+            </div>
+        </div>
+    </section>
+
+    @if (isCreate)
+    {
+        <section class="rd-panel mb-4" aria-labelledby="categoriesHeading">
+            <div class="d-flex justify-content-between align-items-center gap-2 mb-1">
+                <h2 id="categoriesHeading" class="h5 mb-0">Categories</h2>
+                <button type="button" class="btn btn-sm btn-rd-dark" data-add-category><i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add category</button>
+            </div>
+            <p class="small rd-muted mb-3">A distance or age group that participants enrol in. You can add or remove categories later.</p>
+
+            <div id="category-list" class="vstack gap-3" data-next-index="@Math.Max(1, Model.Categories.Count)">
+                @for (var i = 0; i < Math.Max(1, Model.Categories.Count); i++)
+                {
+                    var rowData = new ViewDataDictionary(ViewData) { { "RowIndex", i.ToString() } };
+                    <partial name="_CategoryRow" model="(i < Model.Categories.Count ? Model.Categories[i] : new CategoryInput())" view-data="rowData" />
+                }
+            </div>
+
+            <template id="category-template">
+                <partial name="_CategoryRow" model="new CategoryInput { Distance = 10 }" view-data="templateData" />
+            </template>
+        </section>
+    }
+
+    <div class="d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-rd-primary btn-lg">@(isCreate ? "Create event" : "Save changes")</button>
+        <a class="btn btn-rd-ghost btn-lg" asp-controller="Events" asp-action="Index">Cancel</a>
+    </div>
+</form>

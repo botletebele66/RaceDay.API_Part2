@@ -1,0 +1,11 @@
+@model EventFormViewModel
+@{
+    ViewData["Title"] = "Create event";
+}
+
+<div class="rd-page-head mb-4">
+    <h1 class="rd-title mb-1">Create an event</h1>
+    <p class="rd-muted mb-0">Set the date, place and categories. Participants can enrol as soon as the event is published.</p>
+</div>
+
+<partial name="_EventForm" model="Model" />

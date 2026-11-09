@@ -1,0 +1,94 @@
+@model EventDetailsViewModel
+@{
+    var ev = Model.Event;
+    var local = SouthAfricaTime.FromApi(ev.EventDate);
+    ViewData["Title"] = ev.EventName;
+}
+
+<nav aria-label="Breadcrumb">
+    <ol class="breadcrumb rd-crumbs">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Events</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@ev.EventName</li>
+    </ol>
+</nav>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="rd-detail-media">
+            <partial name="_EventBanner" model="ev" />
+        </div>
+        <div class="rd-panel mt-4">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="rd-badge @UiFormat.EventTypeClass(ev.EventType)"><i class="fa-solid @UiFormat.EventTypeIcon(ev.EventType) me-1" aria-hidden="true"></i>@ev.EventType</span>
+                @if (Model.IsEventOver)
+                {
+                    <span class="rd-badge rd-badge-muted">This event has taken place</span>
+                }
+            </div>
+            <h1 class="rd-title">@ev.EventName</h1>
+            <ul class="rd-facts list-unstyled d-flex flex-wrap gap-4 mt-3 mb-0">
+                <li><i class="fa-regular fa-calendar me-2" aria-hidden="true"></i>@UiFormat.LongDate(local) at @UiFormat.ShortTime(local)</li>
+                <li><i class="fa-solid fa-location-dot me-2" aria-hidden="true"></i>@ev.Location</li>
+                @if (ev.MaxParticipants is { } capacity)
+                {
+                    <li><i class="fa-solid fa-users me-2" aria-hidden="true"></i>Capacity @capacity</li>
+                }
+            </ul>
+            @if (!string.IsNullOrWhiteSpace(ev.Description))
+            {
+                <p class="rd-prose mt-3 mb-0">@ev.Description</p>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <section class="rd-panel" aria-labelledby="categoriesHeading">
+            <h2 id="categoriesHeading" class="h4">Categories</h2>
+            @if (!ev.Categories.Any())
+            {
+                <p class="rd-muted mb-0">Categories will be announced soon.</p>
+            }
+            else
+            {
+                <ul class="list-unstyled rd-cat-list">
+                    @foreach (var category in ev.Categories)
+                    {
+                        <li class="rd-cat">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">@category.CategoryName</div>
+                                <div class="small rd-muted">
+                                    @UiFormat.Km(category.Distance) · @UiFormat.Money(category.EntryFee)
+                                    @if (category.AgeRestriction is { } minimumAge)
+                                    {
+                                        <span> · Age @minimumAge+</span>
+                                    }
+                                </div>
+                            </div>
+                            @if (Model.EnrolledCategoryIds.Contains(category.CategoryId))
+                            {
+                                <span class="rd-badge status-confirmed">You're entered</span>
+                            }
+                            else if (Me.IsParticipant && !Model.IsEventOver)
+                            {
+                                <form asp-controller="Enrolments" asp-action="Enrol" method="post" class="m-0">
+                                    <input type="hidden" name="eventId" value="@ev.EventId" />
+                                    <input type="hidden" name="categoryId" value="@category.CategoryId" />
+                                    <button type="submit" class="btn btn-sm btn-rd-primary">Enrol</button>
+                                </form>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+
+            @if (!Me.IsAuthenticated)
+            {
+                <a class="btn btn-rd-primary w-100 mt-3" asp-controller="Auth" asp-action="Login" asp-route-returnUrl="@Context.Request.Path">Sign in to enrol</a>
+            }
+            else if (Model.IsOwner)
+            {
+                <a class="btn btn-rd-dark w-100 mt-3" asp-controller="Events" asp-action="Manage" asp-route-id="@ev.EventId">Manage this event</a>
+            }
+        </section>
+    </div>
+</div>

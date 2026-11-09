@@ -1,0 +1,48 @@
+@model MyResultsViewModel
+@{
+    ViewData["Title"] = "My results";
+}
+
+<div class="rd-page-head mb-4">
+    <h1 class="rd-title mb-1">My results</h1>
+    <p class="rd-muted mb-0">Your finish times and placings from races you have completed.</p>
+</div>
+
+@if (!Model.Results.Any())
+{
+    <div class="rd-empty text-center">
+        <div class="rd-empty-icon"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
+        <h2 class="h4">No results yet</h2>
+        <p class="rd-muted mb-0">Results appear here after the organiser records your finish.</p>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var r in Model.Results)
+        {
+            var local = SouthAfricaTime.FromApi(r.EventDate);
+            <div class="col-md-6 col-xl-4">
+                <article class="rd-card rd-result-card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <span class="rd-badge @UiFormat.EventTypeClass(r.EventType)">@r.EventType</span>
+                        <span class="small rd-muted">@UiFormat.LongDate(local)</span>
+                    </div>
+                    <h2 class="h5 mb-1">@r.EventName</h2>
+                    <p class="small rd-muted mb-3">@r.CategoryName · @UiFormat.Km(r.Distance)</p>
+                    <div class="rd-result-time">@UiFormat.Duration(r.TimeCompleted)</div>
+                    @if (r.PlacementRank is { } rank)
+                    {
+                        <p class="mb-0 mt-2">
+                            <strong>@UiFormat.Ordinal(rank)</strong>
+                            @if (r.TotalFinishers is { } total)
+                            {
+                                <span class="rd-muted">out of @total.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-ZA")) finishers</span>
+                            }
+                        </p>
+                    }
+                </article>
+            </div>
+        }
+    </div>
+}

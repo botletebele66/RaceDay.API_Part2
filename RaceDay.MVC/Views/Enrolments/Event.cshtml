@@ -1,0 +1,66 @@
+@model EventEnrolmentsViewModel
+@{
+    var ev = Model.Event;
+    ViewData["Title"] = "Participants · " + ev.EventName;
+    var active = Model.Enrolments.Where(e => e.Status != "Withdrawn").ToList();
+}
+
+<nav aria-label="Breadcrumb">
+    <ol class="breadcrumb rd-crumbs">
+        <li class="breadcrumb-item"><a asp-controller="Events" asp-action="Index">My events</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Events" asp-action="Manage" asp-route-id="@ev.EventId">@ev.EventName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Participants</li>
+    </ol>
+</nav>
+
+<div class="rd-page-head d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="rd-title mb-1">Participants</h1>
+        <p class="rd-muted mb-0">@ev.EventName · @UiFormat.LongDate(SouthAfricaTime.FromApi(ev.EventDate)) · @active.Count entered</p>
+    </div>
+    <a class="btn btn-rd-dark" asp-controller="Results" asp-action="Event" asp-route-id="@ev.EventId">Enter results</a>
+</div>
+
+<div class="rd-legend mb-4">
+    <span class="rd-badge status-confirmed">Confirmed</span>
+    <span class="rd-badge status-pending">In progress</span>
+    <span class="rd-badge status-completed">Completed</span>
+    <span class="rd-badge status-withdrawn">Withdrawn</span>
+</div>
+
+@if (!Model.Enrolments.Any())
+{
+    <div class="rd-empty text-center">
+        <div class="rd-empty-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></div>
+        <h2 class="h4">No participants yet</h2>
+        <p class="rd-muted mb-0">Share the event page to start filling your categories.</p>
+    </div>
+}
+else
+{
+    @foreach (var group in Model.Enrolments.GroupBy(e => e.CategoryName).OrderBy(g => g.Key))
+    {
+        <section class="rd-panel p-0 overflow-hidden mb-4" aria-labelledby="cat-@group.Key.GetHashCode()">
+            <div class="rd-panel-head">
+                <h2 id="cat-@group.Key.GetHashCode()" class="h5 mb-0">@group.Key</h2>
+                <span class="small rd-muted">@group.Count(e => e.Status != "Withdrawn") entered</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table rd-table align-middle mb-0">
+                    <thead><tr><th scope="col">Participant</th><th scope="col">Email</th><th scope="col">Enrolled</th><th scope="col">Status</th></tr></thead>
+                    <tbody>
+                        @foreach (var e in group.OrderBy(x => x.LastName))
+                        {
+                            <tr>
+                                <td class="fw-semibold">@e.FirstName @e.LastName</td>
+                                <td class="small">@e.Email</td>
+                                <td class="small">@UiFormat.LongDate(SouthAfricaTime.FromApi(e.EnrolmentDate))</td>
+                                <td><partial name="_StatusBadge" model="e.Status" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+}

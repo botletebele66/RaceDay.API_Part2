@@ -1,0 +1,108 @@
+@model ProfileFormViewModel
+@{
+    ViewData["Title"] = "My profile";
+    var initials = $"{(Model.FirstName.Length > 0 ? Model.FirstName[0].ToString() : "")}{(Model.LastName.Length > 0 ? Model.LastName[0].ToString() : "")}".ToUpperInvariant();
+}
+
+<div class="rd-page-head mb-4">
+    <h1 class="rd-title mb-1">My profile</h1>
+    <p class="rd-muted mb-0">Keep your details up to date. Your name and email appear on your entries.</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <section class="rd-panel text-center" aria-labelledby="picHeading">
+            <h2 id="picHeading" class="h5 mb-3">Profile picture</h2>
+            @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
+            {
+                <img src="@Model.ProfileImageUrl" alt="Your profile picture" class="rd-avatar-lg mb-3" />
+            }
+            else
+            {
+                <div class="rd-avatar-lg rd-avatar-fallback mb-3" aria-hidden="true">@initials</div>
+            }
+            <form asp-action="Picture" method="post" enctype="multipart/form-data">
+                <label class="form-label small fw-semibold" for="picture">Upload a new picture</label>
+                <input id="picture" name="picture" type="file" class="form-control mb-2" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" required />
+                <p class="small rd-muted">JPG, PNG, WEBP or GIF, up to 5 MB.</p>
+                <button type="submit" class="btn btn-rd-dark w-100">Save picture</button>
+            </form>
+        </section>
+    </div>
+
+    <div class="col-lg-8">
+        <form asp-action="Update" method="post" class="rd-panel">
+            <div asp-validation-summary="ModelOnly" class="alert rd-alert rd-alert-danger" role="alert"></div>
+            <input type="hidden" asp-for="UserId" />
+            <input type="hidden" asp-for="Role" />
+
+            <h2 class="h5 mb-3">Personal details</h2>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label asp-for="FirstName" class="form-label fw-semibold"></label>
+                    <input asp-for="FirstName" class="form-control" maxlength="100" />
+                    <span asp-validation-for="FirstName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="LastName" class="form-label fw-semibold"></label>
+                    <input asp-for="LastName" class="form-control" maxlength="100" />
+                    <span asp-validation-for="LastName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label fw-semibold"></label>
+                    <input asp-for="Email" type="email" class="form-control" maxlength="255" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PhoneNumber" class="form-label fw-semibold"></label>
+                    <input asp-for="PhoneNumber" type="tel" class="form-control" maxlength="20" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="DateOfBirth" class="form-label fw-semibold"></label>
+                    <input asp-for="DateOfBirth" type="date" class="form-control" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="EmergencyContact" class="form-label fw-semibold"></label>
+                    <input asp-for="EmergencyContact" class="form-control" maxlength="255" />
+                    <span asp-validation-for="EmergencyContact" class="text-danger small"></span>
+                </div>
+            </div>
+
+            @if (Model.IsOrganiser)
+            {
+                <h2 class="h5 mb-3">Organisation</h2>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="CompanyName" class="form-label fw-semibold"></label>
+                        <input asp-for="CompanyName" class="form-control" maxlength="255" />
+                        <span asp-validation-for="CompanyName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="RegistrationNumber" class="form-label fw-semibold"></label>
+                        <input asp-for="RegistrationNumber" class="form-control" maxlength="50" />
+                        <span asp-validation-for="RegistrationNumber" class="text-danger small"></span>
+                    </div>
+                </div>
+            }
+
+            <h2 class="h5 mb-1">Change password</h2>
+            <p class="small rd-muted mb-3">Leave blank to keep your current password.</p>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label asp-for="NewPassword" class="form-label fw-semibold"></label>
+                    <input asp-for="NewPassword" type="password" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="NewPassword" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ConfirmNewPassword" class="form-label fw-semibold"></label>
+                    <input asp-for="ConfirmNewPassword" type="password" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="ConfirmNewPassword" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-rd-primary btn-lg">Save profile</button>
+        </form>
+    </div>
+</div>
