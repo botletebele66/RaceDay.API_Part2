@@ -1,7 +1,7 @@
 # RaceDay.API_Part2
 # 🏃 RaceDay — Event Management System
 
-### Part 2: RESTful API Development
+### Part 2: RESTful API Development · Part 3: MVC Front End
 
 ---
 
@@ -111,9 +111,14 @@ dotnet run --project RaceDay.API_Part2.csproj
 
 The API will start, and you can access the Swagger UI at the URL printed by the application (typically `https://localhost:<port>/swagger`). The application initializes the database at startup.
 
-### 4. Run Unit Tests
+### 4. Run the Tests
 
-The test project is currently a companion project in the local Visual Studio solution and is not included in this GitHub repository. GitHub Actions builds the API project; tests can be run with `dotnet test <path-to-test-project.csproj>` when that project is available locally.
+```bash
+dotnet test tests/RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj
+dotnet test tests/RaceDay.Tests_Part3/RaceDay.Tests_Part3.csproj
+```
+
+The API suite runs the real API in-process against an EF Core in-memory database. The MVC suite covers view helpers, routing and access control.
 
 ---
 
