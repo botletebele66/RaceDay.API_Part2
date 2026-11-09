@@ -1,0 +1,38 @@
+# Runs the whole RaceDay stack locally: SQL Server, the API and the MVC front end.
+#   docker compose up --build
+# Then open http://localhost:8090 (MVC). The API is on http://localhost:5080 with Swagger at /swagger.
+# Change the SA password for anything beyond local testing: SA_PASSWORD=... docker compose up
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-RaceDay_Local#2026}
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=RaceDay;User Id=sa;Password=${SA_PASSWORD:-RaceDay_Local#2026};TrustServerCertificate=True"
+      Registration__OrganiserInviteCode: ${INVITE_CODE:-RACEDAY-ORG-2026}
+      Seed__Demo: "true"
+    ports:
+      - "5080:8080"
+
+  mvc:
+    build: ./RaceDay.MVC
+    depends_on:
+      - api
+    environment:
+      Api__BaseUrl: "http://api:8080/"
+    ports:
+      - "8090:8080"
