@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using RaceDay.API_Part2.Attributes;
 using RaceDay.API_Part2.Data;
 using RaceDay.API_Part2.DTOs;
 using RaceDay.API_Part2.Helper;
 using RaceDay.API_Part2.Models;
+using RaceDay.API_Part2.Services;
 
 namespace RaceDay.API_Part2.Controllers;
 
@@ -13,7 +15,14 @@ namespace RaceDay.API_Part2.Controllers;
 [Route("api/events")]
 public class EventsController : RaceDayControllerBase
 {
-    public EventsController(AppDbContext db) : base(db) { }
+    private readonly IAzureBlobService _blobs;
+    private readonly IConfiguration _configuration;
+
+    public EventsController(AppDbContext db, IAzureBlobService blobs, IConfiguration configuration) : base(db)
+    {
+        _blobs = blobs;
+        _configuration = configuration;
+    }
 
     /// <summary>List events (public).</summary>
     /// <remarks>Each event includes its categories. Optional filters: eventType, and upcomingOnly to hide events that have started.</remarks>
@@ -248,5 +257,69 @@ public class EventsController : RaceDayControllerBase
 
         await Db.SaveChangesAsync(ct);
         return NoContent();
+    }
+
+    /// <summary>Upload or replace the banner image of an event you organise.</summary>
+    /// <remarks>
+    /// Accepts a JPG, PNG, WEBP or GIF of up to 5 MB, sent as multipart form data in a field called <c>file</c>.
+    /// The file is stored in Azure Blob Storage (or the local uploads folder in development). The previous image is removed.
+    /// </remarks>
+    /// <response code="200">Image stored. Returns the updated event.</response>
+    /// <response code="400">No file, or the file is not an accepted image.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="403">Logged in as a participant, or the event belongs to another organiser.</response>
+    /// <response code="404">Event not found.</response>
+    [HttpPost("{id:int}/image")]
+    [AuthorizeRole(Roles.Organiser)]
+    [RequestSizeLimit(6 * 1024 * 1024)]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(EventResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Microsoft.AspNetCore.Mvc.ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(Microsoft.AspNetCore.Mvc.ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(Microsoft.AspNetCore.Mvc.ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UploadImage(int id, IFormFile? file, CancellationToken ct)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return BadRequestProblem("Choose an image to upload.");
+        }
+
+        var ev = await Db.Events.FirstOrDefaultAsync(e => e.EventID == id, ct);
+        if (ev is null)
+        {
+            return NotFoundProblem("Event not found.");
+        }
+
+        var organiser = await GetCurrentOrganiserAsync(ct);
+        if (organiser is null || ev.OrganiserID != organiser.OrganiserID)
+        {
+            return ForbiddenProblem("You can only manage events that you organise.");
+        }
+
+        string storedUrl;
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            storedUrl = await _blobs.UploadImageAsync(stream, file.FileName, file.ContentType, "events", ct);
+        }
+        catch (InvalidImageException ex)
+        {
+            return BadRequestProblem(ex.Message);
+        }
+
+        var previousUrl = ev.ImageUrl;
+        ev.ImageUrl = PublicUrls.ToPublic(storedUrl, _configuration, Request);
+        ev.UpdatedDate = DateTime.UtcNow;
+        await Db.SaveChangesAsync(ct);
+
+        // Remove the old file only after the database points at the new one.
+        await _blobs.DeleteAsync(previousUrl, ct);
+
+        var response = await Db.Events.AsNoTracking()
+            .Where(e => e.EventID == id)
+            .Select(Projections.EventProjection)
+            .SingleAsync(ct);
+
+        return Ok(response);
     }
 }
