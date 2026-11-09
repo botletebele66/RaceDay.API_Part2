@@ -25,7 +25,7 @@ public static class Projections
                 .OrderBy(c => c.CategoryID)
                 .Select(c => new CategoryResponse(c.CategoryID, c.EventID, c.CategoryName, c.Distance, c.EntryFee, c.AgeRestriction))
                 .ToList(),
-            e.OrganiserID,
+            e.Organiser.UserID,
             e.ImageUrl);
 
     // TotalFinishers is filled in by the controller, which counts results per category in one query.
