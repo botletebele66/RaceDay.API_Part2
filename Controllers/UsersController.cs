@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using RaceDay.API_Part2.Attributes;
 using RaceDay.API_Part2.Data;
 using RaceDay.API_Part2.DTOs;
 using RaceDay.API_Part2.Helper;
 using RaceDay.API_Part2.Models;
+using RaceDay.API_Part2.Services;
 
 namespace RaceDay.API_Part2.Controllers;
 
@@ -13,7 +15,14 @@ namespace RaceDay.API_Part2.Controllers;
 [Route("api/users")]
 public class UsersController : RaceDayControllerBase
 {
-    public UsersController(AppDbContext db) : base(db) { }
+    private readonly IAzureBlobService _blobs;
+    private readonly IConfiguration _configuration;
+
+    public UsersController(AppDbContext db, IAzureBlobService blobs, IConfiguration configuration) : base(db)
+    {
+        _blobs = blobs;
+        _configuration = configuration;
+    }
 
     /// <summary>Get a user's basic details.</summary>
     /// <remarks>Any logged-in user can view basic details. The email address is returned only to the account owner.</remarks>
@@ -160,10 +169,68 @@ public class UsersController : RaceDayControllerBase
 
         var profile = user.UserRole == Roles.Organiser
             ? new UserProfileResponse(user.UserID, user.FirstName, user.LastName, user.Email, user.UserRole,
-                user.Organiser?.PhoneNumber, null, null, user.Organiser?.CompanyName, user.Organiser?.RegistrationNumber)
+                user.Organiser?.PhoneNumber, null, null, user.Organiser?.CompanyName, user.Organiser?.RegistrationNumber,
+                user.ProfileImageUrl)
             : new UserProfileResponse(user.UserID, user.FirstName, user.LastName, user.Email, user.UserRole,
-                user.Participant?.PhoneNumber, user.Participant?.DateOfBirth, user.Participant?.EmergencyContact, null, null);
+                user.Participant?.PhoneNumber, user.Participant?.DateOfBirth, user.Participant?.EmergencyContact, null, null,
+                user.ProfileImageUrl);
 
         return Ok(profile);
+    }
+
+    /// <summary>Upload or replace your profile picture.</summary>
+    /// <remarks>
+    /// Accepts a JPG, PNG, WEBP or GIF of up to 5 MB, sent as multipart form data in a field called <c>file</c>.
+    /// The picture is stored through the API's blob service; the previous picture is removed.
+    /// </remarks>
+    /// <response code="200">Picture stored. Returns its URL.</response>
+    /// <response code="400">No file, or the file is not an accepted image.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="403">Attempting to change another user's picture.</response>
+    /// <response code="404">User not found.</response>
+    [HttpPost("{id:int}/picture")]
+    [AuthorizeRole]
+    [RequestSizeLimit(6 * 1024 * 1024)]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Microsoft.AspNetCore.Mvc.ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(Microsoft.AspNetCore.Mvc.ProblemDetails), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> UploadProfilePicture(int id, IFormFile? file, CancellationToken ct)
+    {
+        if (!IsCurrentUser(id))
+        {
+            return ForbiddenProblem("You can only change your own profile picture.");
+        }
+
+        if (file is null || file.Length == 0)
+        {
+            return BadRequestProblem("Choose an image to upload.");
+        }
+
+        var user = await Db.Users.FirstOrDefaultAsync(u => u.UserID == id, ct);
+        if (user is null)
+        {
+            return NotFoundProblem("User not found.");
+        }
+
+        string storedUrl;
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            storedUrl = await _blobs.UploadImageAsync(stream, file.FileName, file.ContentType, "profiles", ct);
+        }
+        catch (InvalidImageException ex)
+        {
+            return BadRequestProblem(ex.Message);
+        }
+
+        var previousUrl = user.ProfileImageUrl;
+        user.ProfileImageUrl = PublicUrls.ToPublic(storedUrl, _configuration, Request);
+        user.UpdatedDate = DateTime.UtcNow;
+        await Db.SaveChangesAsync(ct);
+
+        await _blobs.DeleteAsync(previousUrl, ct);
+
+        return Ok(new { profileImageUrl = user.ProfileImageUrl });
     }
 }
