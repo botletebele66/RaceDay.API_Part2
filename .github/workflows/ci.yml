@@ -41,3 +41,18 @@ jobs:
         run: |
           dotnet test tests/RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj --configuration Release --no-build
           dotnet test tests/RaceDay.Tests_Part3/RaceDay.Tests_Part3.csproj --configuration Release --no-build
+
+  docker:
+    name: Build Docker images
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build API image
+        run: docker build -t raceday-api:ci .
+
+      - name: Build MVC image
+        run: docker build -t raceday-mvc:ci RaceDay.MVC
