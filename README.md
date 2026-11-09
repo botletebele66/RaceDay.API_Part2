@@ -122,6 +122,73 @@ The API suite runs the real API in-process against an EF Core in-memory database
 
 ---
 
+## 🖥️ Part 3: MVC Front End (`RaceDay.MVC`)
+
+The MVC application is the user interface for RaceDay. It never talks to the database or to Azure directly. Every request goes through the Part 2 REST API, and every file upload is sent to the API, which stores it in Azure Blob Storage (or in local `wwwroot/uploads` when no storage connection is configured).
+
+### How it works
+
+- **Login and registration** are posted from MVC to `api/auth/login` and `api/auth/register`. The API session cookie is kept in the MVC's server-side session and forwarded on each API call, so the browser never holds an API credential.
+- **Session state** is kept for 30 minutes of inactivity, matching the API.
+- **Access control** is enforced in MVC by `[RequireRole]`. Anonymous users are redirected to the login page with a return URL. A participant opening an organiser page gets a 403 page.
+- **Logout** clears the session and redirects to the home page.
+- **Input validation** runs in MVC first. API errors are shown as friendly messages, never as raw exception output.
+- **Times** are stored in UTC by the API and shown in South African Standard Time (UTC+2).
+
+### Pages
+
+| Area | Who | Page | What it does |
+|---|---|---|---|
+| Home | Everyone | `/` | Event listing with type, search and upcoming/all filters |
+| Event details | Everyone | `/Home/Details/{id}` | Banner, facts, categories with fees; enrol button for participants |
+| Login / Register | Everyone | `/Auth/Login`, `/Auth/Register` | Register as a participant or an organiser (organisers need the invite code) |
+| Dashboard | Both | `/Dashboard` | Organiser: events, enrolment totals, upcoming dates. Participant: upcoming entries and completed races |
+| My events (organiser) | Organiser | `/Events` | Create, edit, delete events; add and remove categories; banner upload |
+| Manage event | Organiser | `/Events/Manage/{id}` | Categories, recent enrolments, links to participants and results |
+| Participants | Organiser | `/Enrolments/Event/{id}` | Enrolments per event, grouped by category, with status |
+| Enter results | Organiser | `/Results/Event/{id}` | Finish time (h/m/s) and position per participant |
+| My events (participant) | Participant | `/Enrolments` | Upcoming and past entries with status; withdraw from upcoming events |
+| My results | Participant | `/Results` | Finish time, placing and "47th out of 312 finishers" |
+| Profile | Both | `/Profile` | Personal details, password change, profile picture upload |
+
+### Status colour guide
+
+The same colours are used everywhere a status appears.
+
+| Stored status | Shown as | Colour |
+|---|---|---|
+| `Registered` | Confirmed | Cyan |
+| `Started` | In progress | Amber |
+| `Completed` | Completed | Green |
+| `Withdrawn` | Withdrawn | Flame red |
+
+### Requirements mapping
+
+| Requirement | Where it is met |
+|---|---|
+| MVC does not access the database or Azure | Only `ApiClient` makes outbound calls, to `Api:BaseUrl` |
+| Register and login through the MVC via the API | `AuthController`, `ApiClient` |
+| Session state across pages | MVC session (`CurrentUser`), API cookie forwarded by `ApiClient` |
+| Unauthenticated users blocked from protected pages | `RequireRoleAttribute` on every controller |
+| Logout redirects | `AuthController.Logout` |
+| Organiser dashboard | `DashboardController`, `Views/Dashboard/Index.cshtml` |
+| Events CRUD with name, description, date, location, distance, type | `EventsController`, `_EventForm.cshtml` |
+| Banner upload through the API | `EventsController` → `POST api/events/{id}/image` |
+| Category management | `EventsController.AddCategory` / `DeleteCategory`, category builder |
+| Enrolments per event and upcoming dates | `EnrolmentsController.Event`, dashboard timeline |
+| Results entry (finish time and position) | `ResultsController.Event` / `Record` |
+| Participant home with filters | `HomeController.Index` |
+| Event detail and enrol | `HomeController.Details`, `EnrolmentsController.Enrol` |
+| My events with status | `EnrolmentsController.Index` |
+| My results with placing out of finishers | `ResultsController.Index`, API finisher count |
+| Profile with picture upload | `ProfileController`, `POST api/users/{id}/picture` |
+| Invalid input handled cleanly | Data annotations, validation summary, `ApiResult` friendly messages |
+| Consistent sporting UI | `wwwroot/css/site.css`, Bootstrap 5 with the RaceDay palette |
+| Dockerised | `RaceDay.MVC/Dockerfile` (API: root `Dockerfile`) |
+| CI builds the MVC | `.github/workflows/ci.yml` |
+
+---
+
 ## 🔗 API Endpoints Summary
 
 All endpoints are fully documented and testable via the Swagger UI. Below is a summary of the implemented endpoints:
