@@ -21,7 +21,8 @@ public record UserProfileResponse(
     DateTime? DateOfBirth,
     string? EmergencyContact,
     string? CompanyName,
-    string? RegistrationNumber);
+    string? RegistrationNumber,
+    string? ProfileImageUrl);
 
 /// <summary>
 /// Body for PUT /api/users/{id}. Account fields apply to every role. Participant fields

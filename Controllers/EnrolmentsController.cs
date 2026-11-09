@@ -38,7 +38,12 @@ public class EnrolmentsController : RaceDayControllerBase
             .Select(Projections.EnrolmentSummaryProjection)
             .ToListAsync(ct);
 
-        return Ok(enrolments);
+        var finishers = await CountFinishersAsync(enrolments.Select(e => e.CategoryId).Distinct().ToList(), ct);
+        var withFinishers = enrolments
+            .Select(e => e with { TotalFinishers = finishers.GetValueOrDefault(e.CategoryId) })
+            .ToList();
+
+        return Ok(withFinishers);
     }
 
     /// <summary>Enrol in an event by choosing one of its categories.</summary>

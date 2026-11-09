@@ -13,7 +13,10 @@ public class EnrolRequest
 /// <summary>Response after a successful enrolment.</summary>
 public record EnrolmentCreatedResponse(int EnrolmentId, string Message);
 
-/// <summary>A participant's enrolment, with event, category and result (when recorded).</summary>
+/// <summary>
+/// A participant's enrolment, with event, category and result (when recorded).
+/// TotalFinishers is the number of results recorded in the same category, for example "47th of 312 finishers".
+/// </summary>
 public record EnrolmentSummaryResponse(
     int EnrolmentId,
     string Status,
@@ -27,7 +30,8 @@ public record EnrolmentSummaryResponse(
     string CategoryName,
     decimal Distance,
     int? TimeCompleted,
-    int? PlacementRank);
+    int? PlacementRank,
+    int? TotalFinishers);
 
 /// <summary>An enrolment as seen by the organiser of the event.</summary>
 public record EventEnrolmentResponse(

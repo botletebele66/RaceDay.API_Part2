@@ -24,8 +24,11 @@ public static class Projections
             e.Categories
                 .OrderBy(c => c.CategoryID)
                 .Select(c => new CategoryResponse(c.CategoryID, c.EventID, c.CategoryName, c.Distance, c.EntryFee, c.AgeRestriction))
-                .ToList());
+                .ToList(),
+            e.OrganiserID,
+            e.ImageUrl);
 
+    // TotalFinishers is filled in by the controller, which counts results per category in one query.
     public static readonly Expression<Func<Enrolment, EnrolmentSummaryResponse>> EnrolmentSummaryProjection = e =>
         new EnrolmentSummaryResponse(
             e.EnrolmentID,
@@ -40,7 +43,8 @@ public static class Projections
             e.Category.CategoryName,
             e.Category.Distance,
             e.Result == null ? null : e.Result.TimeCompleted,
-            e.Result == null ? null : e.Result.PlacementRank);
+            e.Result == null ? null : e.Result.PlacementRank,
+            null);
 
     public static readonly Expression<Func<Enrolment, EventEnrolmentResponse>> EventEnrolmentProjection = e =>
         new EventEnrolmentResponse(

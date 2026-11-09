@@ -41,6 +41,23 @@ public abstract class RaceDayControllerBase : ControllerBase
         return await Db.Participants.AsNoTracking().FirstOrDefaultAsync(p => p.UserID == userId.Value, ct);
     }
 
+    /// <summary>
+    /// Number of results recorded per category, in one query. Used to show a finishing position out of the total finishers.
+    /// </summary>
+    protected async Task<Dictionary<int, int>> CountFinishersAsync(List<int> categoryIds, CancellationToken ct)
+    {
+        if (categoryIds.Count == 0)
+        {
+            return new Dictionary<int, int>();
+        }
+
+        return await Db.Results.AsNoTracking()
+            .Where(r => categoryIds.Contains(r.Enrolment.CategoryID))
+            .GroupBy(r => r.Enrolment.CategoryID)
+            .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.CategoryId, x => x.Count, ct);
+    }
+
     protected IActionResult ProblemResponse(int statusCode, string title, string detail) =>
         Problem(detail: detail, title: title, statusCode: statusCode);
 

@@ -84,7 +84,7 @@ public class CategoryRequest
 /// <summary>A category belonging to an event.</summary>
 public record CategoryResponse(int CategoryId, int EventId, string CategoryName, decimal Distance, decimal EntryFee, int? AgeRestriction);
 
-/// <summary>An event with its categories.</summary>
+/// <summary>An event with its categories, the owning organiser and the banner image URL (when one has been uploaded).</summary>
 public record EventResponse(
     int EventId,
     string EventName,
@@ -93,4 +93,6 @@ public record EventResponse(
     string EventType,
     string? Description,
     int? MaxParticipants,
-    List<CategoryResponse> Categories);
+    List<CategoryResponse> Categories,
+    int OrganiserId,
+    string? ImageUrl);
