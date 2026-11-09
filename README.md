@@ -187,6 +187,74 @@ The same colours are used everywhere a status appears.
 | Dockerised | `RaceDay.MVC/Dockerfile` (API: root `Dockerfile`) |
 | CI builds the MVC | `.github/workflows/ci.yml` |
 
+### Run with Docker
+
+Build and run each image. The MVC container reaches the API on the host through `host.docker.internal`, so the API must be published on port 5080.
+
+```bash
+# 1. API (needs a reachable SQL Server; this example points at SQL Server on the host)
+docker build -t raceday-api .
+docker run --rm -p 5080:8080 \
+  -e ConnectionStrings__DefaultConnection="Server=host.docker.internal,1433;Database=RaceDay;User Id=sa;Password=<your-password>;TrustServerCertificate=True" \
+  -e Seed__Demo=true \
+  -e ASPNETCORE_ENVIRONMENT=Development \
+  raceday-api
+
+# 2. MVC front end
+docker build -t raceday-mvc RaceDay.MVC
+docker run --rm -p 8080:8080 --add-host=host.docker.internal:host-gateway \
+  -e Api__BaseUrl=http://host.docker.internal:5080/ \
+  raceday-mvc
+```
+
+Open **http://localhost:8080**.
+
+Or run the whole stack, including SQL Server, with Compose:
+
+```bash
+docker compose up --build
+```
+
+Then open **http://localhost:8090**. SQL Server runs in its own container, so no local SQL Server is needed.
+
+### Run without Docker
+
+```bash
+# Terminal 1: API on the port the MVC expects (Api:BaseUrl in RaceDay.MVC/appsettings.json)
+dotnet run --project RaceDay.API_Part2.csproj --urls http://localhost:5299
+
+# Terminal 2: MVC
+dotnet run --project RaceDay.MVC/RaceDay.MVC.csproj
+```
+
+### Configuration
+
+| Setting | Used by | Purpose |
+|---|---|---|
+| `ConnectionStrings:DefaultConnection` | API | SQL Server connection |
+| `Api:BaseUrl` / `Api__BaseUrl` | MVC | Address of the API, with trailing slash |
+| `App:HttpsRedirect` / `App__HttpsRedirect` | Both | Turn HTTPS redirection on or off (off in the containers) |
+| `Azure:Storage:ConnectionString` | API | Blob storage. Leave empty to use local `wwwroot/uploads` |
+| `Azure:Storage:Container` | API | Container name, default `event-images` |
+| `App:PublicBaseUrl` | API | Public address used in image URLs, optional |
+| `Registration:OrganiserInviteCode` | API | Code required to register as an organiser |
+| `Seed:Demo` | API | Seeds demo accounts and events into an empty database |
+
+### Demo accounts
+
+Seeded when `Seed:Demo` is `true` and the database is empty. All share the password `Password123!`.
+
+| Role | Email |
+|---|---|
+| Organiser | `org1@raceday.co.za` |
+| Participant | `participant1@example.com` |
+
+Organiser invite code in Development: `RACEDAY-ORG-2026`.
+
+### Video walkthrough
+
+YouTube link: _to be added_
+
 ---
 
 ## 🔗 API Endpoints Summary
