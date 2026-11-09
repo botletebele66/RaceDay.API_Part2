@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, part3-mvc]
   pull_request:
     branches: [main, master]
 
@@ -10,7 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  build-and-test:
+    name: Build and test API and MVC
     runs-on: ubuntu-latest
 
     steps:
@@ -23,7 +24,20 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore dependencies
-        run: dotnet restore RaceDay.API_Part2.csproj
+        run: |
+          dotnet restore RaceDay.API_Part2.csproj
+          dotnet restore RaceDay.MVC/RaceDay.MVC.csproj
+          dotnet restore tests/RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj
+          dotnet restore tests/RaceDay.Tests_Part3/RaceDay.Tests_Part3.csproj
 
       - name: Build
-        run: dotnet build RaceDay.API_Part2.csproj --configuration Release --no-restore
+        run: |
+          dotnet build RaceDay.API_Part2.csproj --configuration Release --no-restore
+          dotnet build RaceDay.MVC/RaceDay.MVC.csproj --configuration Release --no-restore
+          dotnet build tests/RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj --configuration Release --no-restore
+          dotnet build tests/RaceDay.Tests_Part3/RaceDay.Tests_Part3.csproj --configuration Release --no-restore
+
+      - name: Test
+        run: |
+          dotnet test tests/RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj --configuration Release --no-build
+          dotnet test tests/RaceDay.Tests_Part3/RaceDay.Tests_Part3.csproj --configuration Release --no-build
