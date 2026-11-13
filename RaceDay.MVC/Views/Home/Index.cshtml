@@ -1,0 +1,236 @@
+@model EventBrowseViewModel
+@{
+    ViewData["Title"] = "Find your next race";
+    var upcoming = Model.When == "upcoming";
+}
+
+<section class="rd-hero mb-4 mb-lg-5" aria-labelledby="heroTitle">
+    <div class="rd-hero-grid">
+        <div class="rd-hero-content">
+            <p class="rd-hero-pill"><span class="rd-pulse" aria-hidden="true"></span> South Africa's race platform</p>
+            <h1 id="heroTitle" class="rd-hero-title">Every race.<br /><span class="rd-accent">One platform.</span></h1>
+            <p class="rd-hero-lead">Organise road runs, walks and cycling events. Enrol in seconds, track your results and chase your next personal best.</p>
+            <div class="d-flex flex-wrap gap-2">
+                @if (!Me.IsAuthenticated)
+                {
+                    <a class="btn btn-rd-primary btn-lg" asp-controller="Auth" asp-action="Register"><i class="fa-solid fa-bolt me-2" aria-hidden="true"></i>Get Started Free</a>
+                    <a class="btn btn-rd-ghost btn-lg" asp-controller="Auth" asp-action="Login"><i class="fa-solid fa-right-to-bracket me-2" aria-hidden="true"></i>Sign in</a>
+                }
+                else if (Me.IsOrganiser)
+                {
+                    <a class="btn btn-rd-primary btn-lg" asp-controller="Events" asp-action="Create">Create an event</a>
+                }
+                else
+                {
+                    <a class="btn btn-rd-primary btn-lg" asp-controller="Enrolments" asp-action="Index">View my events</a>
+                }
+            </div>
+            <dl class="rd-hero-stats">
+                <div class="rd-stat"><dt>Events listed</dt><dd>@Model.Events.Count</dd></div>
+                <div class="rd-stat"><dt>Categories open</dt><dd>@Model.TotalCategories</dd></div>
+                <div class="rd-stat"><dt>Running</dt><dd>@Model.Events.Count(e => e.EventType == "Running")</dd></div>
+                <div class="rd-stat"><dt>Cycling</dt><dd>@Model.Events.Count(e => e.EventType == "Cycling")</dd></div>
+            </dl>
+        </div>
+
+        <div class="rd-hero-visual" aria-hidden="true">
+            <div class="rd-runner-scene">
+                <div class="rd-scenery">
+                    <div class="rd-scene-sun"></div>
+                    <div class="rd-mountains"></div>
+                    <div class="rd-scene-ground">
+                        <div class="rd-ground-lines"></div>
+                    </div>
+                    <div class="rd-speed-lines">
+                        <span></span><span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                </div>
+                <div class="rd-runner">
+                    <svg class="rd-stickman" viewBox="0 0 100 100" focusable="false">
+                        <circle cx="50" cy="15" r="8" class="rd-sm-head" />
+                        <line x1="50" y1="23" x2="50" y2="55" class="rd-sm-torso" />
+                        <g class="rd-arm-left">
+                            <line x1="50" y1="28" x2="42" y2="42" class="rd-sm-limb" />
+                            <g class="rd-arm-left-lower">
+                                <line x1="42" y1="42" x2="48" y2="50" class="rd-sm-limb" />
+                            </g>
+                        </g>
+                        <g class="rd-arm-right">
+                            <line x1="50" y1="28" x2="58" y2="42" class="rd-sm-limb" />
+                            <g class="rd-arm-right-lower">
+                                <line x1="58" y1="42" x2="52" y2="50" class="rd-sm-limb" />
+                            </g>
+                        </g>
+                        <g class="rd-leg-left">
+                            <line x1="50" y1="55" x2="42" y2="70" class="rd-sm-limb" />
+                            <g class="rd-leg-left-lower">
+                                <line x1="42" y1="70" x2="48" y2="85" class="rd-sm-limb" />
+                            </g>
+                        </g>
+                        <g class="rd-leg-right">
+                            <line x1="50" y1="55" x2="58" y2="70" class="rd-sm-limb" />
+                            <g class="rd-leg-right-lower">
+                                <line x1="58" y1="70" x2="52" y2="85" class="rd-sm-limb" />
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+            <div class="rd-visual-caption"><span class="rd-caption-dot"></span> Always moving forward</div>
+        </div>
+    </div>
+</section>
+
+@if (!Me.IsAuthenticated)
+{
+    <section class="rd-how mb-5" aria-labelledby="howTitle">
+        <div class="rd-section-head">
+            <div>
+                <h2 id="howTitle" class="rd-section-title">How it works</h2>
+                <span class="rd-subtitle">From sign-up to starting line in three simple steps</span>
+            </div>
+        </div>
+        <div class="rd-steps">
+            <div class="rd-step">
+                <span class="rd-step-num" aria-hidden="true">01</span>
+                <div class="rd-step-icon"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></div>
+                <h3>Create your profile</h3>
+                <p>Sign up as a runner or organiser in seconds — no credit card required.</p>
+            </div>
+            <div class="rd-step">
+                <span class="rd-step-num" aria-hidden="true">02</span>
+                <div class="rd-step-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></div>
+                <h3>Find your race</h3>
+                <p>Browse events across South Africa, compare categories and enrol in a tap.</p>
+            </div>
+            <div class="rd-step">
+                <span class="rd-step-num" aria-hidden="true">03</span>
+                <div class="rd-step-icon"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i></div>
+                <h3>Cross the line</h3>
+                <p>Track your results, compare times and chase your next personal best.</p>
+            </div>
+        </div>
+    </section>
+}
+
+<form method="get" asp-controller="Home" asp-action="Index" class="rd-filter row g-2 align-items-end mb-4" role="search" aria-label="Filter events">
+    <div class="col-12 col-md-5">
+        <label class="form-label small fw-semibold" for="q">Search</label>
+        <input id="q" name="q" value="@Model.Query" class="form-control" placeholder="Event name or town" />
+    </div>
+    <div class="col-6 col-md-3">
+        <label class="form-label small fw-semibold" for="when">Dates</label>
+        <select id="when" name="when" class="form-select">
+            <option value="upcoming" selected="@upcoming">Upcoming</option>
+            <option value="all" selected="@(!upcoming)">All dates</option>
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <label class="form-label small fw-semibold" for="eventType">Type</label>
+        <select id="eventType" name="eventType" class="form-select">
+            @foreach (var type in new[] { "All" }.Concat(EventTypes.All))
+            {
+                <option value="@type" selected="@(Model.EventType == type)">@type</option>
+            }
+        </select>
+    </div>
+    <div class="col-12 col-md-2 d-grid">
+        <button class="btn btn-rd-dark" type="submit">Apply filters</button>
+    </div>
+</form>
+
+@if (!Model.Events.Any())
+{
+    <div class="rd-empty text-center">
+        <div class="rd-empty-icon"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i></div>
+        <h2 class="h4">No events match those filters</h2>
+        <p class="rd-muted">Try another type, search term or date range.</p>
+        <a class="btn btn-rd-ghost" asp-controller="Home" asp-action="Index">Clear filters</a>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var ev in Model.Events)
+        {
+            var local = SouthAfricaTime.FromApi(ev.EventDate);
+            <div class="col-12 col-md-6 col-xl-4">
+                <article class="rd-card rd-card-event h-100">
+                    <a class="rd-card-media" asp-controller="Home" asp-action="Details" asp-route-id="@ev.EventId" tabindex="-1" aria-hidden="true">
+                        <partial name="_EventBanner" model="ev" />
+                        <span class="rd-date-block">
+                            <span class="rd-date-day">@local.Day</span>
+                            <span class="rd-date-month">@local.ToString("MMM", SouthAfricaTime.Culture)</span>
+                        </span>
+                    </a>
+                    <div class="rd-card-body">
+                        <span class="rd-badge @UiFormat.EventTypeClass(ev.EventType) mb-2">
+                            <i class="fa-solid @UiFormat.EventTypeIcon(ev.EventType) me-1" aria-hidden="true"></i>@ev.EventType
+                        </span>
+                        <h2 class="rd-card-title h5">
+                            <a asp-controller="Home" asp-action="Details" asp-route-id="@ev.EventId">@ev.EventName</a>
+                        </h2>
+                        <p class="rd-muted small mb-2"><i class="fa-solid fa-location-dot me-1" aria-hidden="true"></i>@ev.Location</p>
+                        <p class="small mb-3"><i class="fa-regular fa-calendar me-1" aria-hidden="true"></i>@UiFormat.LongDate(local) · @UiFormat.ShortTime(local)</p>
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach (var category in ev.Categories.Take(4))
+                            {
+                                <span class="rd-chip">@category.CategoryName</span>
+                            }
+                            @if (ev.Categories.Count > 4)
+                            {
+                                <span class="rd-chip">+@(ev.Categories.Count - 4) more</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="rd-card-footer d-flex justify-content-between align-items-center gap-2">
+                        <span class="fw-semibold small">@UiFormat.FeeFrom(ev.Categories.Select(c => c.EntryFee).ToList())</span>
+                        <a class="btn btn-sm btn-rd-dark" asp-controller="Home" asp-action="Details" asp-route-id="@ev.EventId">View event</a>
+                    </div>
+                </article>
+            </div>
+        }
+    </div>
+}
+
+@{
+    var locations = Model.Events.GroupBy(e => e.Location).Take(6).ToList();
+}
+
+@if (!Me.IsAuthenticated && locations.Any())
+{
+    <section class="rd-how mb-5" aria-labelledby="whereTitle">
+        <div class="rd-section-head">
+            <div>
+                <h2 id="whereTitle" class="rd-section-title">Where we race</h2>
+                <span class="rd-subtitle">Landscapes and cityscapes hosting your next start line</span>
+            </div>
+        </div>
+        <div class="rd-location-grid">
+            @foreach (var group in locations)
+            {
+                <div class="rd-location-card">
+                    <img src="@UiFormat.LocationPhotoUrl(group.Key)" alt="@group.Key location photo" loading="lazy" />
+                    <div class="rd-location-shade"></div>
+                    <div class="rd-location-info">
+                        <span class="rd-location-pin" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></span>
+                        <strong>@group.Key</strong>
+                        <small>@group.Count() @(group.Count() == 1 ? "event" : "events") hosted here</small>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="rd-final" aria-labelledby="finalTitle">
+        <div class="rd-final-inner">
+            <div class="rd-final-icon" aria-hidden="true"><i class="fa-solid fa-bolt"></i></div>
+            <h2 id="finalTitle">Ready to race?</h2>
+            <p>Join thousands of athletes and organisers already on RaceDay.</p>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <a class="btn btn-rd-primary btn-lg" asp-controller="Auth" asp-action="Register"><i class="fa-solid fa-user-plus me-2" aria-hidden="true"></i>Create free account</a>
+                <a class="btn btn-rd-ghost btn-lg" asp-controller="Auth" asp-action="Login">Sign in</a>
+            </div>
+        </div>
+    </section>
+}

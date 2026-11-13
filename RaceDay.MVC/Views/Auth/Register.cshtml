@@ -1,0 +1,98 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Create your account";
+    var isOrganiser = Model.Role == Roles.Organiser;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-6">
+        <div class="rd-panel rd-auth rd-form-card p-4 p-lg-5">
+            <h1 class="rd-title h2 mb-1">Create Account</h1>
+            <p class="rd-muted mb-4">Join the RaceDay community. It takes 30 seconds.</p>
+
+            <form asp-controller="Auth" asp-action="Register" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert rd-alert rd-alert-danger" role="alert"></div>
+
+                <fieldset class="mb-4">
+                    <legend class="form-label fw-semibold fs-6">I want to</legend>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <input class="btn-check" type="radio" asp-for="Role" value="Participant" id="roleParticipant" data-role-radio />
+                            <label class="rd-role-card w-100" for="roleParticipant"><i class="fa-solid fa-person-running" aria-hidden="true"></i> Take part</label>
+                        </div>
+                        <div class="col-6">
+                            <input class="btn-check" type="radio" asp-for="Role" value="Organiser" id="roleOrganiser" data-role-radio />
+                            <label class="rd-role-card w-100" for="roleOrganiser"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i> Organise events</label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="FirstName" class="form-label fw-semibold"></label>
+                        <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
+                        <span asp-validation-for="FirstName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="LastName" class="form-label fw-semibold"></label>
+                        <input asp-for="LastName" class="form-control" autocomplete="family-name" />
+                        <span asp-validation-for="LastName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Email" class="form-label fw-semibold"></label>
+                        <input asp-for="Email" class="form-control" autocomplete="email" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Password" class="form-label fw-semibold"></label>
+                        <input asp-for="Password" type="password" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ConfirmPassword" class="form-label fw-semibold"></label>
+                        <input asp-for="ConfirmPassword" type="password" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="PhoneNumber" class="form-label fw-semibold"></label>
+                        <input asp-for="PhoneNumber" class="form-control" autocomplete="tel" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-0" data-role-field="Participant" @(isOrganiser ? "hidden" : "")>
+                    <div class="col-md-6">
+                        <label asp-for="DateOfBirth" class="form-label fw-semibold"></label>
+                        <input asp-for="DateOfBirth" type="date" class="form-control" />
+                        <span class="form-text">Needed for age-restricted categories.</span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="EmergencyContact" class="form-label fw-semibold"></label>
+                        <input asp-for="EmergencyContact" class="form-control" placeholder="Name - phone number" />
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-0" data-role-field="Organiser" @(isOrganiser ? "" : "hidden")>
+                    <div class="col-12"><hr class="rd-divider" /></div>
+                    <div class="col-md-6">
+                        <label asp-for="CompanyName" class="form-label fw-semibold"></label>
+                        <input asp-for="CompanyName" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="RegistrationNumber" class="form-label fw-semibold"></label>
+                        <input asp-for="RegistrationNumber" class="form-control" />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="OrganiserInviteCode" class="form-label fw-semibold"></label>
+                        <input asp-for="OrganiserInviteCode" class="form-control" autocomplete="off" />
+                        <span class="form-text">Organiser accounts need an invite code from RaceDay.</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-rd-primary btn-lg w-100 mt-4" type="submit">Create account</button>
+            </form>
+
+            <p class="text-center small mt-4 mb-0">Already registered? <a asp-controller="Auth" asp-action="Login">Sign in</a></p>
+        </div>
+    </div>
+</div>

@@ -1,13 +1,20 @@
-name: CI
+name: .NET
 
 on:
   push:
-    branches: ["main", "master"]
-  pull_request:
-    branches: ["main", "master"]
+    branches:
+      - main
+      - master
+      - RaceDay-API-Part2
+      - RaceDay-MVC
+      - part3-mvc
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-test:
+  dotnet:
+    name: Restore, build and test (.NET)
     runs-on: ubuntu-latest
 
     steps:
@@ -19,16 +26,21 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Restore
-        run: dotnet restore RaceDay.API_Part2.csproj
+      - name: Restore dependencies
+        run: |
+          dotnet restore RaceDay.API_Part2.csproj
+          dotnet restore RaceDay.MVC/RaceDay.MVC.csproj
+          dotnet restore tests/RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj
+          dotnet restore tests/RaceDay.Tests_Part3/RaceDay.Tests_Part3.csproj
 
       - name: Build
-        run: dotnet build RaceDay.API_Part2.csproj --configuration Release --no-restore
-
-      - name: Run tests
-        if: ${{ hashFiles('tests/**/*.csproj') != '' }}
-        shell: bash
         run: |
-          for proj in tests/*/*.csproj; do
-            dotnet test "$proj" --configuration Release --verbosity normal
-          done
+          dotnet build RaceDay.API_Part2.csproj --configuration Release --no-restore
+          dotnet build RaceDay.MVC/RaceDay.MVC.csproj --configuration Release --no-restore
+          dotnet build tests/RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj --configuration Release --no-restore
+          dotnet build tests/RaceDay.Tests_Part3/RaceDay.Tests_Part3.csproj --configuration Release --no-restore
+
+      - name: Test
+        run: |
+          dotnet test tests/RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj --configuration Release --no-build
+          dotnet test tests/RaceDay.Tests_Part3/RaceDay.Tests_Part3.csproj --configuration Release --no-build

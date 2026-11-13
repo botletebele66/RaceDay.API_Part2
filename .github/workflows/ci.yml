@@ -2,9 +2,13 @@ name: CI
 
 on:
   push:
+<<<<<<< Updated upstream
     branches: [main, master]
   pull_request:
     branches: [main, master]
+=======
+    branches: [main, master, RaceDay-API-Part2, RaceDay-MVC]
+>>>>>>> Stashed changes
 
 permissions:
   contents: read
@@ -26,4 +30,32 @@ jobs:
         run: dotnet restore RaceDay.API_Part2.csproj
 
       - name: Build
+<<<<<<< Updated upstream
         run: dotnet build RaceDay.API_Part2.csproj --configuration Release --no-restore
+=======
+        run: |
+          dotnet build RaceDay.API_Part2.csproj --configuration Release --no-restore
+          dotnet build RaceDay.MVC/RaceDay.MVC.csproj --configuration Release --no-restore
+          dotnet build tests/RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj --configuration Release --no-restore
+          dotnet build tests/RaceDay.Tests_Part3/RaceDay.Tests_Part3.csproj --configuration Release --no-restore
+
+      - name: Test
+        run: |
+          dotnet test tests/RaceDay.APItests_Part2/RaceDay.APItests_Part2.csproj --configuration Release --no-build
+          dotnet test tests/RaceDay.Tests_Part3/RaceDay.Tests_Part3.csproj --configuration Release --no-build
+
+  docker:
+    name: Build Docker images
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build API image
+        run: docker build -t raceday-api:ci .
+
+      - name: Build MVC image
+        run: docker build -t raceday-mvc:ci RaceDay.MVC
+>>>>>>> Stashed changes

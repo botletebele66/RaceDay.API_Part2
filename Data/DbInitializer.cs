@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using RaceDay.API_Part2.Helper;
 using RaceDay.API_Part2.Models;
 
@@ -15,6 +16,16 @@ public static class DbInitializer
     public static void Initialize(AppDbContext db, bool seedDemoData)
     {
         db.Database.EnsureCreated();
+
+        // EnsureCreated does not update an existing database when the model changes.
+        // Keep this idempotent SQL Server schema update until the project adopts EF migrations.
+        db.Database.ExecuteSqlRaw("""
+            IF OBJECT_ID(N'dbo.Users', N'U') IS NOT NULL
+               AND COL_LENGTH(N'dbo.Users', N'ProfileImageUrl') IS NULL
+            BEGIN
+                ALTER TABLE dbo.Users ADD ProfileImageUrl nvarchar(max) NULL;
+            END
+            """);
 
         if (!seedDemoData || db.Users.Any())
         {
