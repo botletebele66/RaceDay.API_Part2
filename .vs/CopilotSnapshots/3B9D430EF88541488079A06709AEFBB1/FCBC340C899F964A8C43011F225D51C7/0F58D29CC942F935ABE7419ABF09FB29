@@ -1,0 +1,27 @@
+﻿// Line 22: Changed from Dictionary<string, byte[]> to:
+private readonly Dictionary<string, byte[]?> _values = [];
+
+// Line 31: Removed the null-forgiving operator:
+bool ISession.TryGetValue(string key, out byte[]? value) => _values.TryGetValue(key, out value);<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<TargetFramework>net10.0</TargetFramework>
+	<Nullable>enable</Nullable>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<IsPackable>false</IsPackable>
+	<IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
+	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+	<PackageReference Include="xunit" Version="2.9.2" />
+	<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<ProjectReference Include="..\RaceDay.API_Part2\RaceDay.API_Part2.csproj" />
+  </ItemGroup>
+
+</Project>

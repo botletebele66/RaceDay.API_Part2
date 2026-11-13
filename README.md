@@ -16,6 +16,15 @@
 
 [![Build](https://github.com/botletebele66/RaceDay.API_Part2/actions/workflows/ci.yml/badge.svg)](https://github.com/botletebele66/RaceDay.API_Part2/actions/workflows/ci.yml)
 
+<img width="987" height="192" alt="image" src="https://github.com/user-attachments/assets/504725ee-0dd2-409a-8ee6-84cdefaf1fd4" />
+
+---
+## рџЋҐ Video Walkthrough
+
+You can watch a video overview and demonstration of the project here: <img width="1365" height="585" alt="image" src="https://github.com/user-attachments/assets/0e120397-56d5-43b7-a40f-c5528d8354ec" />
+
+**[RaceDay - Event Management System Overview](https://youtu.be/qjv4jQ3NKVc)**
+
 ---
 
 ## 🚀 About Part 2

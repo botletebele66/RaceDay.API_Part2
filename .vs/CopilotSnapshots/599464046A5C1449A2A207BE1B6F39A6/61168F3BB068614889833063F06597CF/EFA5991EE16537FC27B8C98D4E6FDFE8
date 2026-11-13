@@ -1,0 +1,125 @@
+﻿using System.Text;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Routing;
+using RaceDay.API_Part2.Attributes;
+using RaceDay.API_Part2.Helper;
+using Xunit;
+
+namespace RaceDay.APItests_Part2.RaceDay.APItests_Part2.Tests;
+
+/// <summary>
+/// Tests the authorisation filter on its own. The controllers also check ownership, so an end-to-end test cannot tell
+/// whether the attribute itself rejected a request. These tests do.
+/// </summary>
+public class AuthorizeRoleAttributeTests
+{
+    private sealed class FakeSession : ISession
+    {
+        private readonly Dictionary<string, byte[]> _values = [];
+        public bool IsAvailable => true;
+        public string Id { get; } = Guid.NewGuid().ToString();
+        public IEnumerable<string> Keys => _values.Keys;
+        public void Clear() => _values.Clear();
+        public Task CommitAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task LoadAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public void Remove(string key) => _values.Remove(key);
+        public void Set(string key, byte[] value) => _values[key] = value;
+        bool ISession.TryGetValue(string key, out byte[]? value) => _values.TryGetValue(key, out value!);
+    }
+
+    private sealed class SessionFeature : ISessionFeature
+    {
+        public ISession Session { get; set; } = null!;
+    }
+
+    private static AuthorizationFilterContext ContextWith(int? userId, string? role)
+    {
+        var session = new FakeSession();
+        if (userId is int id)
+        {
+            session.SetInt32(SessionKeys.UserId, id);
+        }
+        if (role is not null)
+        {
+            session.SetString(SessionKeys.UserRole, role);
+        }
+
+        var http = new DefaultHttpContext();
+        http.Features.Set<ISessionFeature>(new SessionFeature { Session = session });
+        var action = new ActionContext(http, new RouteData(), new ActionDescriptor());
+        return new AuthorizationFilterContext(action, new List<IFilterMetadata>());
+    }
+
+    private static int? StatusOf(AuthorizationFilterContext context) => (context.Result as ObjectResult)?.StatusCode;
+
+    [Fact]
+    public async Task NoSession_Returns401()
+    {
+        var context = ContextWith(null, null);
+
+        await new AuthorizeRoleAttribute(Roles.Organiser).OnAuthorizationAsync(context);
+
+        Assert.Equal(401, StatusOf(context));
+    }
+
+    [Fact]
+    public async Task WrongRole_Returns403()
+    {
+        var context = ContextWith(7, Roles.Participant);
+
+        await new AuthorizeRoleAttribute(Roles.Organiser).OnAuthorizationAsync(context);
+
+        Assert.Equal(403, StatusOf(context));
+    }
+
+    [Fact]
+    public async Task MatchingRole_IsAllowed()
+    {
+        var context = ContextWith(7, Roles.Organiser);
+
+        await new AuthorizeRoleAttribute(Roles.Organiser).OnAuthorizationAsync(context);
+
+        Assert.True(context.Result is null, "A matching role should not short-circuit the request.");
+    }
+
+    [Fact]
+    public async Task AnyRoleListed_IsAllowedForEither()
+    {
+        var participant = ContextWith(7, Roles.Participant);
+        var organiser = ContextWith(8, Roles.Organiser);
+        var attribute = new AuthorizeRoleAttribute(Roles.Organiser, Roles.Participant);
+
+        await attribute.OnAuthorizationAsync(participant);
+        await attribute.OnAuthorizationAsync(organiser);
+
+        Assert.True(participant.Result is null && organiser.Result is null, "Both listed roles should be allowed.");
+    }
+
+    [Fact]
+    public async Task NoRolesSpecified_AllowsAnyLoggedInUser_ButStillRejectsAnonymous()
+    {
+        var loggedIn = ContextWith(7, Roles.Participant);
+        var anonymous = ContextWith(null, null);
+        var attribute = new AuthorizeRoleAttribute();
+
+        await attribute.OnAuthorizationAsync(loggedIn);
+        await attribute.OnAuthorizationAsync(anonymous);
+
+        Assert.True(loggedIn.Result is null, "A logged-in user should pass an attribute with no roles.");
+        Assert.Equal(401, StatusOf(anonymous));
+    }
+
+    [Fact]
+    public async Task SessionWithUserIdButNoRole_Returns401()
+    {
+        var context = ContextWith(7, null);
+
+        await new AuthorizeRoleAttribute(Roles.Organiser).OnAuthorizationAsync(context);
+
+        Assert.Equal(401, StatusOf(context));
+    }
+}
