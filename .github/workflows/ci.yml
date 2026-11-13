@@ -3,8 +3,6 @@ name: CI
 on:
   push:
     branches: [main, master, part3-mvc]
-  pull_request:
-    branches: [main, master]
 
 permissions:
   contents: read
