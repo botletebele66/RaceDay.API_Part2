@@ -90,6 +90,66 @@ public static class UiFormat
 
     public static string ShortTime(DateTime localTime) => localTime.ToString("HH:mm", CultureInfo.InvariantCulture);
 
+    /// <summary>A stock photo for a race location, matched on town or region name. Unknown places get a generic road photo.</summary>
+    public static string LocationPhotoUrl(string? location)
+    {
+        var name = location ?? string.Empty;
+        string photo;
+        if (ContainsAny(name, "cape town", "table mountain", "stellenbosch", "paarl", "clifton", "camps bay"))
+        {
+            photo = "photo-1506905925346-21bda4d32df4";
+        }
+        else if (ContainsAny(name, "pietermaritzburg", "maritzburg"))
+        {
+            photo = "photo-1470071459604-3b5ec3a7fe05";
+        }
+        else if (ContainsAny(name, "durban", "kwazulu", "umhlanga", "ballito"))
+        {
+            photo = "photo-1507525428034-b723cf961d3e";
+        }
+        else if (ContainsAny(name, "soweto"))
+        {
+            photo = "photo-1480714378408-67cf0d13bc1b";
+        }
+        else if (ContainsAny(name, "johannesburg", "joburg", "sandton", "gauteng", "midrand"))
+        {
+            photo = "photo-1449824913935-59a10b8d2000";
+        }
+        else if (ContainsAny(name, "pretoria", "tshwane", "centurion"))
+        {
+            photo = "photo-1476514525535-07fb3b4ae5f1";
+        }
+        else if (ContainsAny(name, "port elizabeth", "gqeberha"))
+        {
+            photo = "photo-1519046904884-53103b34b206";
+        }
+        else if (ContainsAny(name, "bloemfontein", "free state"))
+        {
+            photo = "photo-1509316785289-025f5b846b35";
+        }
+        else if (ContainsAny(name, "knysna", "garden route", "george", "mossel bay"))
+        {
+            photo = "photo-1441974231531-c6227db76b6e";
+        }
+        else
+        {
+            photo = "photo-1461896836934-ffe607ba8211";
+        }
+        return "https://images.unsplash.com/" + photo + "?w=800&h=450&q=80&auto=format&fit=crop";
+    }
+
+    private static bool ContainsAny(string text, params string[] keywords)
+    {
+        foreach (var keyword in keywords)
+        {
+            if (text.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /// <summary>Distance in kilometres without trailing zeros: 42, 21.1, 109.</summary>
     public static string Km(decimal distance) => distance.ToString("0.##", CultureInfo.InvariantCulture) + " km";
 }

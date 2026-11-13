@@ -75,4 +75,28 @@
       button.setAttribute("aria-pressed", show ? "true" : "false");
     });
   });
+
+  // Light / dark theme toggle. The choice is remembered per browser; storage may be unavailable, so it is optional.
+  var themeToggle = document.getElementById("rdThemeToggle");
+  if (themeToggle) {
+    var root = document.documentElement;
+
+    var syncToggle = function () {
+      var dark = root.getAttribute("data-theme") === "dark";
+      var icon = themeToggle.querySelector("i");
+      themeToggle.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+      if (icon) {
+        icon.className = dark ? "fa-solid fa-sun" : "fa-solid fa-moon";
+      }
+    };
+
+    themeToggle.addEventListener("click", function () {
+      var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try { window.localStorage.setItem("raceday_theme_v1", next); } catch (e) { /* private mode: keep the in-memory choice only */ }
+      syncToggle();
+    });
+
+    syncToggle();
+  }
 })();

@@ -11,14 +11,9 @@ namespace RaceDay.API_Part2.Controllers;
 /// <summary>Registration, login, logout and session renewal. Authentication is server-side session based.</summary>
 [ApiController]
 [Route("api/auth")]
-public class AuthController : RaceDayControllerBase
+public class AuthController(AppDbContext db, IConfiguration configuration) : RaceDayControllerBase(db)
 {
-    private readonly IConfiguration _configuration;
-
-    public AuthController(AppDbContext db, IConfiguration configuration) : base(db)
-    {
-        _configuration = configuration;
-    }
+    private readonly IConfiguration _configuration = configuration;
 
     /// <summary>Register a new Participant or Organiser account.</summary>
     /// <remarks>
